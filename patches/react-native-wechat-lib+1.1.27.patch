@@ -1,0 +1,110 @@
+diff --git a/node_modules/react-native-wechat-lib/ios/RCTWeChat.h b/node_modules/react-native-wechat-lib/ios/RCTWeChat.h
+index cae023e..573628e 100644
+--- a/node_modules/react-native-wechat-lib/ios/RCTWeChat.h
++++ b/node_modules/react-native-wechat-lib/ios/RCTWeChat.h
+@@ -2,7 +2,9 @@
+ #import <UIKit/UIKit.h>
+ 
+ #import <React/RCTBridgeModule.h>
++#if !TARGET_OS_SIMULATOR
+ #import "WXApi.h"
++#endif
+ 
+ // define share type constants
+ #define RCTWXShareTypeNews @"news"
+@@ -24,7 +26,11 @@
+ #define RCTWXEventName @"WeChat_Resp"
+ #define RCTWXEventNameWeChatReq @"WeChat_Req"
+ 
+-@interface RCTWeChat : NSObject <RCTBridgeModule, WXApiDelegate>
++@interface RCTWeChat : NSObject <RCTBridgeModule
++#if !TARGET_OS_SIMULATOR
++, WXApiDelegate
++#endif
++>
+ 
+ @property NSString* appId;
+ 
+diff --git a/node_modules/react-native-wechat-lib/ios/RCTWeChat.m b/node_modules/react-native-wechat-lib/ios/RCTWeChat.m
+index e236589..70f16ee 100644
+--- a/node_modules/react-native-wechat-lib/ios/RCTWeChat.m
++++ b/node_modules/react-native-wechat-lib/ios/RCTWeChat.m
+@@ -1,15 +1,19 @@
+ //  Created by little-snow-fox on 2019-10-9.
+ 
+ #import "RCTWeChat.h"
+-#import "WXApiObject.h"
+ #import <React/RCTEventDispatcher.h>
+ #import <React/RCTBridge.h>
+ #import <React/RCTLog.h>
+ #import <React/RCTImageLoader.h>
+ 
++#if !TARGET_OS_SIMULATOR
++#import "WXApiObject.h"
++#endif
++
+ // Define error messages
+ #define NOT_REGISTERED (@"registerApp required.")
+ #define INVOKE_FAILED (@"WeChat API invoke returns false.")
++#define SIMULATOR_UNSUPPORTED (@"WeChat is not available on simulator.")
+ 
+ @implementation RCTWeChat
+ 
+@@ -31,6 +35,7 @@ - (void)dealloc
+     [[NSNotificationCenter defaultCenter] removeObserver:self];
+ }
+ 
++#if !TARGET_OS_SIMULATOR
+ - (BOOL)handleOpenURL:(NSNotification *)aNotification
+ {
+     NSString * aURLString =  [aNotification userInfo][@"url"];
+@@ -43,6 +48,9 @@ - (BOOL)handleOpenURL:(NSNotification *)aNotification
+         return NO;
+     }
+ }
++#else
++- (BOOL)handleOpenURL:(NSNotification *)aNotification { return NO; }
++#endif
+ 
+ - (dispatch_queue_t)methodQueue
+ {
+@@ -105,6 +113,7 @@ - (NSData *)compressImage:(UIImage *)image toByte:(NSUInteger)maxLength {
+     return data;
+ }
+ 
++#if !TARGET_OS_SIMULATOR
+ RCT_EXPORT_METHOD(registerApp:(NSString *)appid
+                   :(NSString *)universalLink
+                   :(RCTResponseSenderBlock)callback)
+@@ -642,5 +651,31 @@ -(void) onResp:(BaseResp*)resp
+         [self.bridge.eventDispatcher sendDeviceEventWithName:RCTWXEventName body:body];
+     }
+ }
++#else
++// Stub implementations for simulator - WeChat SDK not linked
++RCT_EXPORT_METHOD(registerApp:(NSString *)appid :(NSString *)universalLink :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(isWXAppInstalled:(RCTResponseSenderBlock)callback) { callback(@[[NSNull null], @NO]); }
++RCT_EXPORT_METHOD(isWXAppSupportApi:(RCTResponseSenderBlock)callback) { callback(@[[NSNull null], @NO]); }
++RCT_EXPORT_METHOD(getWXAppInstallUrl:(RCTResponseSenderBlock)callback) { callback(@[[NSNull null], @""]); }
++RCT_EXPORT_METHOD(getApiVersion:(RCTResponseSenderBlock)callback) { callback(@[[NSNull null], @""]); }
++RCT_EXPORT_METHOD(openWXApp:(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(sendRequest:(NSString *)openid :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(sendAuthRequest:(NSString *)scope :(NSString *)state :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(sendSuccessResponse:(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(sendErrorCommonResponse:(NSString *)message :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(sendErrorUserCancelResponse:(NSString *)message :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareText:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(chooseInvoice:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareFile:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareImage:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareLocalImage:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareMusic:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareVideo:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareWebpage:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(shareMiniProgram:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(subscribeMessage:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(launchMiniProgram:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++RCT_EXPORT_METHOD(pay:(NSDictionary *)data :(RCTResponseSenderBlock)callback) { callback(@[SIMULATOR_UNSUPPORTED]); }
++#endif
+ 
+ @end

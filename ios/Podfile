@@ -12,6 +12,9 @@ linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
+else
+  # 强制启用静态框架（Swift 必需）
+  use_frameworks! :linkage => :static
 end
 
 target 'WenDaoNativeProject' do
@@ -23,6 +26,15 @@ target 'WenDaoNativeProject' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  # ========== 修改：只给自动引入的依赖开启模块化头文件，不重复声明 ==========
+  pre_install do |installer|
+    installer.pod_targets.each do |pod|
+      if pod.name == 'react-native-screens' || pod.name == 'react-native-safe-area-context'
+        pod.build_settings['MODULAR_HEADERS'] = 'YES'
+      end
+    end
+  end
+
   post_install do |installer|
     react_native_post_install(
       installer,
@@ -30,5 +42,52 @@ target 'WenDaoNativeProject' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    
+    # 固定 Swift 版本
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if target.name == "react-native-screens"
+          config.build_settings['SWIFT_VERSION'] = '5.0'
+        end
+      end
+    end
+
+    # libWeChatSDK.a 仅含真机架构，模拟器链接会报 "built for iOS"。从 xcconfig 中移除 WeChat 链接，
+    # 改为仅在真机构建时由主工程链接。
+    ['Pods-WenDaoNativeProject.debug.xcconfig', 'Pods-WenDaoNativeProject.release.xcconfig'].each do |name|
+      xcconfig_path = File.join(__dir__, 'Pods', 'Target Support Files', 'Pods-WenDaoNativeProject', name)
+      if File.exist?(xcconfig_path)
+        content = File.read(xcconfig_path)
+        content = content.gsub(/\s*"\$\{PODS_ROOT\}\/\.\.\/\.\.\/node_modules\/react-native-wechat-lib\/ios"\s*/, ' ')
+        content = content.gsub(/\s*-l"WeChatSDK"\s*/, ' ')
+        File.write(xcconfig_path, content)
+      end
+    end
+
+    # 主工程：真机时链接 WeChat SDK，模拟器时允许未定义符号（不链接 WeChat）
+    main_project_path = File.join(__dir__, 'WenDaoNativeProject.xcodeproj')
+    if File.exist?(main_project_path)
+      require 'xcodeproj'
+      main_project = Xcodeproj::Project.open(main_project_path)
+      wechat_lib_path = '$(SRCROOT)/../node_modules/react-native-wechat-lib/ios'
+      main_project.targets.each do |target|
+        next unless target.name == 'WenDaoNativeProject'
+        target.build_configurations.each do |config|
+          # 仅真机构建时链接 libWeChatSDK.a
+          config.build_settings['LIBRARY_SEARCH_PATHS[sdk=iphoneos*]'] = ['$(inherited)', "\"#{wechat_lib_path}\""]
+          config.build_settings['OTHER_LDFLAGS[sdk=iphoneos*]'] = ['$(inherited)', '-lWeChatSDK']
+          # 模拟器允许未定义符号（WeChat 不参与链接）
+          flags = config.build_settings['OTHER_LDFLAGS'] || ['$(inherited)']
+          flags = [flags] if flags.is_a?(String)
+          sim_flags = config.build_settings['OTHER_LDFLAGS[sdk=iphonesimulator*]'] || flags.dup
+          sim_flags = [sim_flags] if sim_flags.is_a?(String)
+          unless sim_flags.any? { |f| f.to_s.include?('undefined') }
+            sim_flags << '-Wl,-undefined,dynamic_lookup'
+            config.build_settings['OTHER_LDFLAGS[sdk=iphonesimulator*]'] = sim_flags
+          end
+        end
+      end
+      main_project.save
+    end
   end
 end

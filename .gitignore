@@ -73,3 +73,12 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+~/.nvm/
+.nvm/
+# 忽略系统级文档/手册文件
+share/
+doc/
+man/
+# 通用的Node/系统忽略规则（可选，补充）
+node_modules/
+*.log
