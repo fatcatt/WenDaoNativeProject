@@ -182,7 +182,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n";
+			shellScript = "set -e\n\n# 1. 强制设置正确的NVM_DIR（无~，用绝对路径）\nexport NVM_DIR=\"/Users/tianqi/.nvm\"\n[ -s \"$NVM_DIR/nvm.sh\" ] && \\. \"$NVM_DIR/nvm.sh\"\n\n# 2. 恢复系统基础命令路径\nexport PATH=\"/usr/bin:/bin:/usr/sbin:/sbin:$PATH\"\n\n# 3. 指定Node 20的绝对路径（替换v20.xx.x为实际版本）\nexport NODE_BINARY=\"/Users/tianqi/.nvm/versions/node/v20.19.0/bin/node\"\n\n# 4. 验证Node路径和版本（方便排查）\necho \"=== NVM/Node 验证 ===\"\necho \"NVM_DIR: $NVM_DIR\"\necho \"NODE_BINARY: $NODE_BINARY\"\nif [ -f \"$NODE_BINARY\" ]; then\n  echo \"✅ Node路径存在，版本：$($NODE_BINARY -v)\"\nelse\n  echo \"❌ Node路径不存在！已安装的Node版本：$(node -v)\"\n  ls -la $NVM_DIR/versions/node/  # 打印已安装的Node版本\nfi\n\n# 5. 原有脚本逻辑\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n";
 		};
 		80E8689889A3B701F4A8BC2B /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
