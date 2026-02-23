@@ -25,12 +25,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     window = UIWindow(frame: UIScreen.main.bounds)
 
     factory.startReactNative(
-      withModuleName: "WenDaoNativeProject",
+      withModuleName: "XingYuanShuiJingNativeProject",
       in: window,
       launchOptions: launchOptions
     )
 
     return true
+  }
+
+  // 支付宝/微信等通过 URL Scheme 返回 App 时由 React Native Linking 处理
+  func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    return RCTLinkingManager.application(app, open: url, options: options)
   }
 }
 

@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useRef} from 'react';
-import {View, Text, SafeAreaView, ScrollView, TouchableWithoutFeedback, Animated, TouchableOpacity, ActivityIndicator, Modal, TouchableHighlight, Alert} from 'react-native';
+import {View, Text, SafeAreaView, ScrollView, TouchableWithoutFeedback, Animated, TouchableOpacity, ActivityIndicator, Modal, TouchableHighlight, Alert, TextInput} from 'react-native';
 import moment from 'moment';
 import {obb} from '../../utils/lunar.js';
 import {JD, J2000, radd, int2} from '../../utils/eph0.js';
@@ -32,6 +32,7 @@ function BaziPanScreen({route}) {
     const [shenShaToast, setshenShaToast] = useState({});
     const [shenShaModalVisible, setShenShaModalVisible] = useState(false);
     const [yongshenModal, setYongshenModal] = useState(false);
+    const [activeTab, setActiveTab] = useState(1); // 0基本信息 1基本排盘 2专业细盘 3断事笔记
 
     const handlePressIn = index => {
         // 点击时渐渐显示
@@ -186,54 +187,59 @@ function BaziPanScreen({route}) {
         setshenShaToast(e);
         setShenShaModalVisible(true);
     };
+    const TAB_LABELS = ['基本信息', '基本排盘', '专业细盘', '断事笔记'];
+
     return (
-        <ScrollView style={styles.paipanWrapper}>
-            <SafeAreaView style={styles.safeArea}></SafeAreaView>
-            {/* {!BZ_result.solarDate ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#666666CC" />
-                    <Text style={styles.loadingText}>加载中...</Text>
-                </View>
-            ) : ( */}
-            <View>
-                <View style={styles.bazipanHeader}>
-                    <TouchableOpacity
-                        onPress={() => navigation.goBack()} // Handle back navigation
-                    >
-                        <Icon name="chevron-back-outline" size={20} color="#fff"></Icon>
+        <View style={styles.paipanWrapper}>
+            <SafeAreaView style={styles.safeAreaTop} />
+            {/* 导航栏：与上方分割，白底 */}
+            <View style={styles.navBar}>
+                <View style={styles.navSide}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Icon name="chevron-back-outline" size={24} color="#1a1612" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>天机八字盘</Text>
-                    <View>
-                        {isSaved ? (
-                            <TouchableOpacity
-                                onPress={toggleSwitch} // Handle back navigation
-                            >
-                                <Icon name="bookmark" size={22} color="#FFB54C" />
-                            </TouchableOpacity>
-                        ) : (
-                            <TouchableOpacity
-                                onPress={toggleSwitch} // Handle back navigation
-                            >
-                                <Icon name="bookmark-outline" size={22} color="#fff" />
-                            </TouchableOpacity>
-                        )}
-                        {/* <Text>保存：</Text>
-                    <Switch style={styles.saveSwitch} trackColor={{false: '#767577', true: '#81b0ff'}} thumbColor={isSaved ? '#f5dd4b' : '#f4f3f4'} ios_backgroundColor="#3e3e3e" onValueChange={toggleSwitch} value={isSaved} /> */}
-                    </View>
                 </View>
-                {notice && (
-                    <View style={styles.notice}>
-                        <Text style={styles.noticeText}>保 存 成 功!</Text>
-                    </View>
-                )}
+                <View style={styles.headerTitleWrap}>
+                    <Text style={styles.headerTitle}>星垣水镜 八字盘</Text>
+                </View>
+                <View style={styles.navSideRight}>
+                    {isSaved ? (
+                        <TouchableOpacity onPress={toggleSwitch}>
+                            <Icon name="bookmark" size={22} color="#8b4513" />
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity onPress={toggleSwitch}>
+                            <Icon name="bookmark-outline" size={22} color="#1a1612" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
+            {/* Tab 栏：与盘面分割 */}
+            <View style={styles.tabBar}>
+                {TAB_LABELS.map((label, index) => (
+                    <TouchableOpacity
+                        key={label}
+                        style={[styles.tabItem, activeTab === index && styles.tabItemActive]}
+                        onPress={() => setActiveTab(index)}
+                        activeOpacity={0.7}>
+                        <Text style={[styles.tabText, activeTab === index && styles.tabTextActive]}>{label}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+            {notice && (
+                <View style={styles.notice}>
+                    <Text style={styles.noticeText}>保 存 成 功!</Text>
+                </View>
+            )}
+            <ScrollView style={{flex: 1}} contentContainerStyle={{paddingBottom: 24}}>
                 <View style={styles.paipanContainer}>
-                    <View style={styles.header}></View>
-                    {/* <Text>{JSON.stringify(route)}</Text> */}
-                    <Text>{'姓名：' + nickname}</Text>
-                    <Text>{'出生时间：' + '阳历' + solarDate}</Text>
-                    <Text>{'出生时间：' + '阴历' + lunardata}</Text>
-                    <Text style={styles.marginSeparate}>{BZ_result.jieqi}</Text>
-                    {/* <Text>{`${ob?.bz_jn}年${ob?.bz_jy}月${ob?.bz_jr}日${ob?.bz_js}时`}</Text> */}
+                    {activeTab === 0 && <View />}
+                    {activeTab === 1 && (
+                        <>
+                    <Text style={styles.miniFont}>{'姓名：' + nickname}</Text>
+                    <Text style={styles.miniFont}>{'出生时间（阳历）：' + solarDate}</Text>
+                    <Text style={styles.miniFont}>{'出生时间（阴历）：' + lunardata}</Text>
+                    <Text style={[styles.marginSeparate, styles.miniFont]}>{BZ_result.jieqi}</Text>
                     <View style={[styles.container, styles.marginSeparate]}>
                         <View style={styles.column}>
                             <Text style={[styles.genderTitle]}>{BZ_result?.gender === 'male' ? '乾造：' : '坤造：'}</Text>
@@ -401,7 +407,6 @@ function BaziPanScreen({route}) {
                                     inputRange: [0, 1],
                                     outputRange: ['rgba(247, 232, 170, 0)', 'rgba(247, 232, 170, 0.6)']
                                 });
-                                247;
                                 return (
                                     <View style={styles.column}>
                                         <TouchableWithoutFeedback key={index} onPressIn={() => handlePressIn(index)} onPressOut={() => handlePressOut(index)}>
@@ -439,12 +444,13 @@ function BaziPanScreen({route}) {
                                 );
                             })}
                     </ScrollView>
-                    {/* <Text>{dayun.join(',')}</Text> */}
-                    {/* <View style={styles.remarkWrapper}>
-                            <Text>备注：</Text>
-                            <TextInput style={styles.remark} placeholder="写入备注后请保存" onChangeText={onChangeText} />
-                        </View> */}
+                        </>
+                    )}
+                    {activeTab === 0 && <View />}
+                    {activeTab === 2 && <View />}
+                    {activeTab === 3 && <View />}
                 </View>
+            </ScrollView>
                 <Modal
                     animationType="slide"
                     transparent={true}
@@ -542,10 +548,8 @@ function BaziPanScreen({route}) {
                         </View>
                     </View>
                 </Modal>
-            </View>
-            {/* )} */}
             <SafeAreaView style={styles.safeAreaBottom} />
-        </ScrollView>
+        </View>
     );
 }
 

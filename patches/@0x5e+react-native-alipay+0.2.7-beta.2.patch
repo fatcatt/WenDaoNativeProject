@@ -1,0 +1,90 @@
+diff --git a/node_modules/@0x5e/react-native-alipay/index.js b/node_modules/@0x5e/react-native-alipay/index.js
+index f22ca80..b9d8c61 100644
+--- a/node_modules/@0x5e/react-native-alipay/index.js
++++ b/node_modules/@0x5e/react-native-alipay/index.js
+@@ -2,43 +2,47 @@ import { NativeModules } from 'react-native';
+ import { Buffer } from 'buffer';
+ import RSASign from 'jsrsasign';
+ 
+-const { Alipay } = NativeModules;
++const Alipay = NativeModules.Alipay;
+ 
+-Alipay.sign = (object, privateKey) => {
+-
+-  // Add default sign_type
+-  if (!object.sign_type || object.sign_type.length === 0) {
+-    object.sign_type = 'RSA';
+-  }
+-
+-  // Remove sign field
+-  delete object.sign;
+-
+-  // Remove empty field
+-  Object.keys(object).forEach((key) => {
+-    if (String(object[key]).length === 0) {
+-      delete object[key];
++// 仅当原生模块存在时挂载 sign，避免 "cannot set property 'sign' of null"（模拟器或未链接时 Alipay 可能为 null）
++if (Alipay) {
++  Alipay.sign = (object, privateKey) => {
++    if (!object || typeof object !== 'object') {
++      throw new Error('Alipay.sign: object 不能为空');
+     }
+-  })
+-
+-  // Sort query string
+-  var sortedQuery = '';
+-  let sortedKeys = Object.keys(object).sort((a, b) => a > b);
+-  for (var i = 0; i < sortedKeys.length; i++) {
+-    let key = sortedKeys[i];
+-    let value = object[key];
+-    sortedQuery += `${(i === 0) ? '' : '&'}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+-  }
+-
+-  // Create signature
+-  let alg = {RSA: 'SHA1withRSA', RSA2: 'SHA256withRSA'}[object.sign_type];
+-  let sig = new RSASign.KJUR.crypto.Signature({alg});
+-  sig.init(RSASign.KEYUTIL.getKey(privateKey));
+-  sig.updateString(sortedQuery);
+-  let sign = Buffer.from(sig.sign(), 'hex').toString('base64');
+-
+-  sortedQuery += `&sign=${encodeURIComponent(sign)}`;
+-  return sortedQuery;
++    // Add default sign_type
++    if (!object.sign_type || object.sign_type.length === 0) {
++      object.sign_type = 'RSA';
++    }
++    // Remove sign field
++    delete object.sign;
++    // Remove empty field
++    Object.keys(object).forEach((key) => {
++      if (String(object[key]).length === 0) {
++        delete object[key];
++      }
++    });
++    // Sort query string
++    var sortedQuery = '';
++    let sortedKeys = Object.keys(object).sort((a, b) => a > b);
++    for (var i = 0; i < sortedKeys.length; i++) {
++      let key = sortedKeys[i];
++      let value = object[key];
++      sortedQuery += `${(i === 0) ? '' : '&'}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
++    }
++    // Create signature
++    let alg = {RSA: 'SHA1withRSA', RSA2: 'SHA256withRSA'}[object.sign_type];
++    let sig = new RSASign.KJUR.crypto.Signature({alg});
++    sig.init(RSASign.KEYUTIL.getKey(privateKey));
++    let sign = Buffer.from(sig.sign(), 'hex').toString('base64');
++    sortedQuery += `&sign=${encodeURIComponent(sign)}`;
++    return sortedQuery;
++  };
+ }
+ 
+-export default Alipay;
+\ No newline at end of file
++// 原生未就绪时导出占位对象，避免调用 pay 时再报错
++export default Alipay || {
++  setAlipaySandbox: () => {},
++  pay: () => Promise.reject(new Error('支付宝原生模块未就绪，请使用真机或检查原生链接')),
++  sign: () => { throw new Error('支付宝原生模块未就绪'); },
++};
+\ No newline at end of file

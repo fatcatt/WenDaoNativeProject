@@ -1,4 +1,4 @@
-package com.wendaonativeproject
+package com.xingyuanshuijingnativeproject
 
 import android.app.Application
 import com.facebook.react.PackageList

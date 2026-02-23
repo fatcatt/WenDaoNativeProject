@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "WenDaoNativeProject.app"
-               BlueprintName = "WenDaoNativeProject"
-               ReferencedContainer = "container:WenDaoNativeProject.xcodeproj">
+               BuildableName = "XingYuanShuiJingNativeProject.app"
+               BlueprintName = "XingYuanShuiJingNativeProject"
+               ReferencedContainer = "container:XingYuanShuiJingNativeProject.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "WenDaoNativeProjectTests.xctest"
-               BlueprintName = "WenDaoNativeProjectTests"
-               ReferencedContainer = "container:WenDaoNativeProject.xcodeproj">
+               BuildableName = "XingYuanShuiJingNativeProjectTests.xctest"
+               BlueprintName = "XingYuanShuiJingNativeProjectTests"
+               ReferencedContainer = "container:XingYuanShuiJingNativeProject.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "WenDaoNativeProject.app"
-            BlueprintName = "WenDaoNativeProject"
-            ReferencedContainer = "container:WenDaoNativeProject.xcodeproj">
+            BuildableName = "XingYuanShuiJingNativeProject.app"
+            BlueprintName = "XingYuanShuiJingNativeProject"
+            ReferencedContainer = "container:XingYuanShuiJingNativeProject.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "WenDaoNativeProject.app"
-            BlueprintName = "WenDaoNativeProject"
-            ReferencedContainer = "container:WenDaoNativeProject.xcodeproj">
+            BuildableName = "XingYuanShuiJingNativeProject.app"
+            BlueprintName = "XingYuanShuiJingNativeProject"
+            ReferencedContainer = "container:XingYuanShuiJingNativeProject.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

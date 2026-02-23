@@ -1,298 +1,374 @@
-import {View, Button, Text, DatePickerIOS, Platform} from 'react-native';
-const styles = {
-    paipanWrapper: {
-        // backgroundColor: '#fff7b3',
-        // backgroundColor: '#FFFFC0',
-        // backgroundColor: '#F2F5FE',
-        backgroundColor: '#FFFDD1',
-        height: '100%',
-        flex: 1
-    },
-    bazipanHeader: {
-        backgroundColor: '#5b4942',
-        alignItems: 'center',
-        paddingTop: 3,
-        paddingLeft: 8,
-        paddingRight: 16,
-        paddingBottom: 8,
-        justifyContent: 'space-between',
-        flexDirection: 'row'
-    },
-    headerTitle: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: 500,
-        // flex: 1, // 右侧文字占用的空间
-        textAlign: 'center'
-    },
-    paipanContainer: {
-        flex: 1,
-        padding: 14
-    },
-    safeArea: {
-        backgroundColor: '#5b4942'
-    },
-    safeAreaBottom: {
-        backgroundColor: '#FFFDD1'
-    },
-    header: {
-        // height: 40,
-        backgroundColor: '#333'
-    },
-    container: {
-        backgroundColor: '#FFFDD1',
-        flexDirection: 'row',
-        flexWrap: 'wrap'
-    },
-    column: {
-        flex: 1,
-        marginRight: 4
-    },
-    bigFont: {
-        fontSize: 22,
-        fontWeight: 800,
-        fontFamily: 'Arial'
-    },
-    middleFont: {
-        fontSize: 18,
-        fontWeight: 500
-    },
-    miniFont: {
-        fontSize: 14
-    },
-    boldFont: {
-        fontWeight: 500
-    },
-    // 有相关性的间距与没有相关性的间距做区分 注意：有相关性的间距可能不是8，可能是0
-    marginSeparate: {
-        marginBottom: 10
-    },
-    // 正式的字体与非正式的字体做区分
-    formalFontFamily: {},
-    inFormalFontFamily: {},
-    // 标题与content做锁紧区分
-    tabLeft: {
-        marginLeft: 8
-    },
-    colorJin: {
-        color: '#FF9900'
-    },
-    colorMu: {
-        color: '#22DD22'
-    },
-    colorShui: {
-        color: '#000000'
-    },
-    colorHuo: {
-        color: '#DD2222'
-    },
-    colorTu: {
-        color: '#a06300'
-    },
-    fontFamilyMain: {
-        fontFamily: 'Arial'
-    },
-    inline: {
-        flexWrap: 'nowrap',
-        flexDirection: 'row'
-    },
-    canggan: {
-        marginBottom: 2
-    },
-    yunFont: {
-        color: '#333',
-        fontSize: 19,
-        fontWeight: 600
-    },
-    genderTitle: {
-        fontSize: 18
-    },
-    startWithBox: {
-        marginBottom: 6,
-        marginTop: 6,
-        alignItems: 'center'
-    },
-    startWithText: {
-        fontSize: 14
-    },
-    liunianText: {
-        fontSize: 16,
-        marginBottom: 2
-    },
-    touchable: {
-        borderRadius: 2,
-        backgroundColor: 'transparent',
-        padding: 2
-    },
-    nianIndex: {
-        alignItems: 'center'
-    },
+import { Platform } from 'react-native';
 
-    notice: {
-        position: 'absolute',
-        left: '50%',
-        top: '50%',
-        transform: [
-            {translateX: -110}, // Adjust by half width
-            {translateY: -32} // Adjust by half height
-        ],
-        backgroundColor: '#F5F5F5CC',
-        paddingTop: 8,
-        width: 220,
-        paddingBottom: 8,
-        // paddingLeft: 32,
-        // paddingRight: 32,
-        borderRadius: 10,
-        zIndex: 1000
-        // boxShadow: '0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)'
-    },
-    noticeText: {
-        color: '#333',
-        textAlign: 'center',
-        fontSize: 16
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 100
-    },
-    loadingText: {
-        marginTop: 10,
-        fontSize: 16,
-        color: '#666'
-    },
-    remarkWrapper: {
-        marginTop: 32
-    },
-    remark: {
-        height: 40,
-        borderWidth: 0.5,
-        padding: 10,
-        marginTop: 8
-    },
-    geju: {
-        flex: 1,
-        justifyContent: 'space-between',
-        flexDirection: 'row'
-    },
-    // gejuText: {
-    //     marginTop: 2,
-    //     color: '#AF9153',
-    //     fontWeight: 600
-    // },
-    centeredView: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 22
-    },
-    modalView: {
-        width: '90%',
-        margin: 20,
-        backgroundColor: '#FFFFE7',
-        borderRadius: 20,
-        padding: 18,
-        paddingTop: 16,
-        paddingBottom: 16,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
-        borderRadius: 10
-    },
-    openButton: {
-        backgroundColor: '#F194FF',
-        borderRadius: 15,
-        padding: 8,
-        elevation: 2,
-        paddingTop: 4,
-        paddingBottom: 4,
-        paddingLeft: 32,
-        paddingRight: 32,
-        marginTop: 16
-    },
-    textStyle: {
-        color: 'white',
-        fontWeight: 'bold',
-        textAlign: 'center'
-    },
-    modalText: {
-        marginBottom: 15,
-        textAlign: 'center'
-    },
-    modalTitleWrapper: {
-        display: 'flex',
-        flexDirection: 'row',
-        marginBottom: 8,
-        justifyContent: 'center'
-    },
-    gejuWrapper: {
-        // felx: 1,
-        // flexDirection: 'row',
-        justifyContent: 'flex-start',
-        backgroundColor: '#D9EDF699',
-        borderWidth: 1,
-        borderColor: '#D9EDF6',
-        paddingTop: 8,
-        paddingBottom: 8,
-        width: '100%',
-        paddingLeft: 16,
-        paddingRight: 16,
-        // paddingRight: 18,
-        borderRadius: 8,
-        marginBottom: 8
-    },
-    gejuText: {
-        color: '#42748a',
-        fontWeight: 600,
-        fontSize: 14,
-        lineHeight: 22
-    },
-    yongshenText: {
-        color: '#42748a',
-        fontSize: 14,
-        lineHeight: 22,
-        marginBottom: 8
-    },
-    gejuModalTitle: {
-        color: '#42748a',
-        fontWeight: 600,
-        fontSize: 20
-    },
-    mingyu: {
-        // marginTop: 8,
-        fontWeight: 600,
-        fontSize: 14,
-        lineHeight: 22
-    },
-    shenshaText: {
-        color: '#42748a'
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)'
-    },
-    modalContent: {
-        width: '80%',
-        maxHeight: '70%',
-        borderRadius: 10,
-        paddingTop: 18,
-        paddingBottom: 18,
-        paddingLeft: 8,
-        paddingRight: 8,
-        alignItems: 'center',
-        backgroundColor: '#FFFFE7'
-    },
-    scrollContainer: {}
+// 头部与参考图一致：白底、与上方/盘面分割
+const colors = {
+  bg: '#f5f2eb',
+  primary: '#8b4513',
+  primaryLight: '#a0522d',
+  headerBg: '#ffffff',
+  headerText: '#1a1612',
+  text: '#1a1612',
+  textSecondary: '#4a4238',
+  border: '#e8e4dc',
+  card: '#ffffff',
+  cardWarm: '#faf8f5',
+  tabAccent: '#5c4a3a',
+  // Tab 栏与首页同色系深色
+  tabBarBg: '#5c4a3a',
+  tabBarBorder: '#4a3d30',
+  tabBarText: '#c4b8a8',
+  tabBarTextActive: '#f5f2eb',
+  tabBarActiveLine: '#c4a77d',
 };
+
+const styles = {
+  // 整页：上白头 + 下盘面
+  paipanWrapper: {
+    backgroundColor: colors.bg,
+    flex: 1,
+  },
+  // 顶部安全区（与状态栏分割，白底）
+  safeAreaTop: {
+    backgroundColor: colors.headerBg,
+  },
+  // 导航栏：白底，与上方有间距
+  navBar: {
+    backgroundColor: colors.headerBg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  navSide: {
+    minWidth: 40,
+    alignItems: 'flex-start',
+  },
+  navSideRight: {
+    minWidth: 40,
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: 16,
+  },
+  headerTitleWrap: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: colors.headerText,
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  // Tab 栏：与首页同色系深色
+  tabBar: {
+    backgroundColor: colors.tabBarBg,
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+    paddingTop: 4,
+    paddingBottom: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.tabBarBorder,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+  },
+  tabItemActive: {
+    borderBottomWidth: 3,
+    borderBottomColor: colors.tabBarActiveLine,
+  },
+  tabText: {
+    fontSize: 14,
+    color: colors.tabBarText,
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    fontSize: 14,
+    color: colors.tabBarTextActive,
+    fontWeight: '600',
+  },
+  // 盘面内容区（与头部白条分割）
+  paipanContainer: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: colors.bg,
+  },
+  safeAreaBottom: {
+    backgroundColor: colors.bg,
+  },
+  header: {
+    height: 0,
+    opacity: 0,
+  },
+  // 兼容旧名
+  bazipanHeader: {
+    backgroundColor: colors.headerBg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingLeft: 12,
+    paddingRight: 16,
+    paddingBottom: 12,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+  },
+  safeArea: {
+    backgroundColor: colors.headerBg,
+  },
+  container: {
+    backgroundColor: colors.bg,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  column: {
+    flex: 1,
+    marginRight: 4,
+  },
+  bigFont: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  middleFont: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  miniFont: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  boldFont: {
+    fontWeight: '500',
+  },
+  marginSeparate: {
+    marginBottom: 10,
+  },
+  formalFontFamily: {},
+  inFormalFontFamily: {},
+  tabLeft: {
+    marginLeft: 8,
+  },
+  colorJin: { color: '#c4952c' },
+  colorMu: { color: '#2d7a4a' },
+  colorShui: { color: colors.text },
+  colorHuo: { color: '#b54a4a' },
+  colorTu: { color: '#8b6914' },
+  fontFamilyMain: {
+    fontFamily: 'Arial',
+  },
+  inline: {
+    flexWrap: 'nowrap',
+    flexDirection: 'row',
+  },
+  canggan: {
+    marginBottom: 2,
+  },
+  yunFont: {
+    color: colors.text,
+    fontSize: 19,
+    fontWeight: '600',
+  },
+  genderTitle: {
+    fontSize: 18,
+    color: colors.text,
+  },
+  startWithBox: {
+    marginBottom: 6,
+    marginTop: 6,
+    alignItems: 'center',
+  },
+  startWithText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  liunianText: {
+    fontSize: 16,
+    marginBottom: 2,
+    color: colors.text,
+  },
+  touchable: {
+    borderRadius: 6,
+    backgroundColor: 'transparent',
+    padding: 4,
+  },
+  nianIndex: {
+    alignItems: 'center',
+  },
+  notice: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: [{ translateX: -110 }, { translateY: -32 }],
+    backgroundColor: colors.card,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    width: 220,
+    borderRadius: 12,
+    zIndex: 1000,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  noticeText: {
+    color: colors.text,
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 100,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  remarkWrapper: {
+    marginTop: 32,
+  },
+  remark: {
+    height: 44,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginTop: 8,
+    backgroundColor: colors.card,
+  },
+  geju: {
+    flex: 1,
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    width: '90%',
+    margin: 20,
+    backgroundColor: colors.card,
+    borderRadius: 16,
+    padding: 20,
+    paddingTop: 18,
+    paddingBottom: 18,
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  openButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 32,
+    marginTop: 16,
+    ...Platform.select({ android: { elevation: 2 } }),
+  },
+  textStyle: {
+    color: '#fff',
+    fontWeight: '700',
+    textAlign: 'center',
+    fontSize: 15,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+    color: colors.text,
+  },
+  modalTitleWrapper: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    justifyContent: 'center',
+  },
+  gejuWrapper: {
+    justifyContent: 'flex-start',
+    backgroundColor: colors.cardWarm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    width: '100%',
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  gejuText: {
+    color: colors.text,
+    fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  yongshenText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  gejuModalTitle: {
+    color: colors.primary,
+    fontWeight: '600',
+    fontSize: 20,
+  },
+  mingyu: {
+    fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 22,
+    color: colors.text,
+  },
+  shenshaText: {
+    color: colors.textSecondary,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
+  modalContent: {
+    width: '85%',
+    maxHeight: '75%',
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+  scrollContainer: {},
+};
+
 export default styles;
-// 1、主体部分可以通过重复的方式凸显。比如八字主体和大运
-// 2、应该形成明确的对比；主体的八字大运部分，和胎元命宫等形成明确对比

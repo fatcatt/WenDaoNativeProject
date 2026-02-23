@@ -22,27 +22,38 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// 与首页同色系，头部/Tab 用偏灰棕降低抢眼度
+const tabColors = {
+    active: '#5c4a3a',
+    inactive: '#7a6f64',
+    barBg: '#ffffff',
+};
+
 const TabNavigator = () => {
     return (
         <Tab.Navigator
             screenOptions={({route}) => ({
-                tabBarIcon: ({focused, color, size}) => {
-                    let iconName;
-
-                    if (route.name === '天机排盘宝') {
-                        iconName = focused ? 'yin-yang' : 'yin-yang';
-                    } else if (route.name === '档案') {
-                        iconName = focused ? 'meh-blank' : 'meh-blank';
-                    }
-
-                    return <FontAwesome5 name={iconName} size={20} style={{color: focused ? '#81b0ff' : 'grey'}} />;
+                tabBarIcon: ({focused}) => {
+                    const iconName = route.name === '星垣水镜' ? 'yin-yang' : 'user-circle';
+                    return (
+                        <FontAwesome5
+                            name={iconName}
+                            size={22}
+                            style={{color: focused ? tabColors.active : tabColors.inactive}}
+                        />
+                    );
                 },
-                tabBarActiveTintColor: '#81b0ff', // Active tab color
-                tabBarInactiveTintColor: 'grey', // Inactive tab color
-                tabBarLabelStyle: {fontSize: 14}, // Adjust font size
-                tabBarStyle: {height: 60} // Adjust tab bar height
+                tabBarActiveTintColor: tabColors.active,
+                tabBarInactiveTintColor: tabColors.inactive,
+                tabBarLabelStyle: {fontSize: 13, fontWeight: '500'},
+                tabBarStyle: {
+                    height: 60,
+                    backgroundColor: tabColors.barBg,
+                    borderTopColor: '#e8e4dc',
+                    borderTopWidth: 1,
+                },
             })}>
-            <Tab.Screen name="天机排盘宝" component={HomeScreen} options={{headerShown: false}} />
+            <Tab.Screen name="星垣水镜" component={HomeScreen} options={{headerShown: false}} />
             <Tab.Screen name="我的" component={SettingsScreen} options={{headerShown: false}} />
         </Tab.Navigator>
     );

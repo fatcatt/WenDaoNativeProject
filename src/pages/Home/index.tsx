@@ -325,54 +325,50 @@ export default function HomeScreen({navigation}) {
                 <View style={styles.inputInfo}>
                     <View style={styles.selectButtons}>
                         <View style={styles.genderWrapper}>
-                            <TouchableOpacity style={[gender === 'male' ? styles.activeButton : styles.unActiveButton, {borderTopLeftRadius: 5, borderBottomLeftRadius: 5}]} onPress={selectMale} activeOpacity={1}>
-                                <Text style={gender === 'male' ? styles.activeGenderText : styles.unActiveGenderText}>{'男'}</Text>
+                            <TouchableOpacity style={[gender === 'male' ? styles.activeButton : styles.unActiveButton, styles.segmentFirst]} onPress={selectMale} activeOpacity={0.8}>
+                                <Text style={gender === 'male' ? styles.activeGenderText : styles.unActiveGenderText}>男</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[gender === 'female' ? styles.activeButton : styles.unActiveButton, {borderTopRightRadius: 5, borderBottomRightRadius: 5}]} onPress={selectFemale} activeOpacity={1}>
-                                <Text style={gender === 'female' ? styles.activeGenderText : styles.unActiveGenderText}>{'女'}</Text>
+                            <TouchableOpacity style={[gender === 'female' ? styles.activeButton : styles.unActiveButton, styles.segmentLast]} onPress={selectFemale} activeOpacity={0.8}>
+                                <Text style={gender === 'female' ? styles.activeGenderText : styles.unActiveGenderText}>女</Text>
                             </TouchableOpacity>
                         </View>
                         <View style={styles.genderWrapper}>
-                            <TouchableOpacity
-                                style={[dateType === 'gregorian' ? styles.activeButton : styles.unActiveButton, {borderTopLeftRadius: 5, borderBottomLeftRadius: 5}]}
-                                onPress={() => {
-                                    setDateType('gregorian');
-                                }}
-                                activeOpacity={1}>
-                                <Text style={dateType === 'gregorian' ? styles.activeGenderText : styles.unActiveGenderText}>{'公历'}</Text>
+                            <TouchableOpacity style={[dateType === 'gregorian' ? styles.activeButton : styles.unActiveButton, styles.segmentFirst]} onPress={() => setDateType('gregorian')} activeOpacity={0.8}>
+                                <Text style={dateType === 'gregorian' ? styles.activeGenderText : styles.unActiveGenderText}>公历</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[dateType === 'lunar' ? styles.activeButton : styles.unActiveButton, {borderRightWidth: 0, borderLeftWidth: 0}]} onPress={() => setDateType('lunar')} activeOpacity={1}>
-                                <Text style={dateType === 'lunar' ? styles.activeGenderText : styles.unActiveGenderText}>{'农历'}</Text>
+                            <TouchableOpacity style={[dateType === 'lunar' ? styles.activeButton : styles.unActiveButton]} onPress={() => setDateType('lunar')} activeOpacity={0.8}>
+                                <Text style={dateType === 'lunar' ? styles.activeGenderText : styles.unActiveGenderText}>农历</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[dateType === 'fantui' ? styles.activeButton : styles.unActiveButton, {borderTopRightRadius: 5, borderBottomRightRadius: 5}]} onPress={() => handleChangeDateType('fantui')} activeOpacity={1}>
-                                <Text style={dateType === 'fantui' ? styles.activeGenderText : styles.unActiveGenderText}>{'反推'}</Text>
+                            <TouchableOpacity style={[dateType === 'fantui' ? styles.activeButton : styles.unActiveButton, styles.segmentLast]} onPress={() => handleChangeDateType('fantui')} activeOpacity={0.8}>
+                                <Text style={dateType === 'fantui' ? styles.activeGenderText : styles.unActiveGenderText}>反推</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                     <TouchableWithoutFeedback onPress={onSelectDate}>
-                        {/* 点击这个 View 区域会触发 openModal 函数 */}
                         <View style={styles.inputContainer}>
-                            <TextInput value={inputFrom.inputDate} editable={false} placeholder="日期" pointerEvents="none" style={styles.formItem} />
+                            <TextInput value={inputFrom.inputDate} editable={false} placeholder="选择日期" placeholderTextColor="#9c958a" pointerEvents="none" style={styles.formItem} />
                         </View>
                     </TouchableWithoutFeedback>
                     <TouchableWithoutFeedback onPress={onSelectTime}>
-                        {/* 点击这个 View 区域会触发 openModal 函数 */}
                         <View style={styles.inputContainer}>
-                            <TextInput value={inputFrom.inputTime} editable={false} placeholder="时间" pointerEvents="none" style={styles.formItem} />
+                            <TextInput value={inputFrom.inputTime} editable={false} placeholder="选择时间" placeholderTextColor="#9c958a" pointerEvents="none" style={styles.formItem} />
                         </View>
                     </TouchableWithoutFeedback>
                     <View style={styles.inputContainer}>
-                        <TextInput value={inputFrom.inputPlace} editable={false} placeholder="地点" pointerEvents="none" style={styles.formItem} />
+                        <TextInput value={inputFrom.inputPlace} editable={false} placeholder="出生地点" placeholderTextColor="#9c958a" pointerEvents="none" style={styles.formItem} />
                     </View>
-                    {/* <View style={styles.inputContainer}> */}
-                    <TextInput value={inputFrom.inputName} onChangeText={text => dispatch({type: 'UPDATE_NAME', payload: text})} placeholder="姓名" style={styles.formItem} />
+                    <View style={styles.inputContainer}>
+                        <TextInput value={inputFrom.inputName} onChangeText={text => dispatch({type: 'UPDATE_NAME', payload: text})} placeholder="姓名（选填）" placeholderTextColor="#9c958a" style={styles.formItem} />
+                    </View>
                     {/* </View> */}
                 </View>
                 <TouchableOpacity style={styles.button} onPress={ML_calc}>
                     <Text style={styles.buttonText}>{'开始排盘'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.contact}>
-                    <Text onPress={handlePaste}>{"点击关注  '天机排盘'"}</Text>
+                <TouchableOpacity style={styles.contact} onPress={handlePaste} activeOpacity={0.7}>
+                    <Text style={styles.contactText}>
+                        点击关注 <Text style={styles.contactLink}>星垣水镜</Text>
+                    </Text>
                 </TouchableOpacity>
                 {/* 日期选择器 */}
                 {Platform.OS === 'ios' ? (
@@ -422,7 +418,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.nianGan}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_NIANGAN', payload: selectedItem});
@@ -432,7 +428,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.nianGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.nianZhi}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_NIANZHI', payload: selectedItem});
@@ -447,7 +443,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.yueGan}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_YUEGAN', payload: selectedItem});
@@ -457,7 +453,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.yueGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.yueZhi}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_YUEZHI', payload: selectedItem});
@@ -472,7 +468,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.riGan}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_RIGAN', payload: selectedItem});
@@ -482,7 +478,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.riGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.riZhi}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_RIZHI', payload: selectedItem});
@@ -497,7 +493,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.shiGan}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_SHIGAN', payload: selectedItem});
@@ -507,7 +503,7 @@ export default function HomeScreen({navigation}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.shiGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 60, height: 60, borderRadius: 30}}
+                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
                                         defaultButtonText={ftBaziInfo.shiZhi}
                                         onSelect={(selectedItem, index) => {
                                             setFtBaziInfo({type: 'UPDATE_SHIZHI', payload: selectedItem});

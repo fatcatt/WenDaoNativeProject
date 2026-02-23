@@ -17,8 +17,11 @@ else
   use_frameworks! :linkage => :static
 end
 
-target 'WenDaoNativeProject' do
+target 'XingYuanShuiJingNativeProject' do
   config = use_native_modules!
+
+  # 支付宝 SDK（使用本地 podspec 引用 node_modules，避免 No podspec found）
+  pod 'RCTAlipay', :path => 'RCTAlipay'
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -54,8 +57,8 @@ target 'WenDaoNativeProject' do
 
     # libWeChatSDK.a 仅含真机架构，模拟器链接会报 "built for iOS"。从 xcconfig 中移除 WeChat 链接，
     # 改为仅在真机构建时由主工程链接。
-    ['Pods-WenDaoNativeProject.debug.xcconfig', 'Pods-WenDaoNativeProject.release.xcconfig'].each do |name|
-      xcconfig_path = File.join(__dir__, 'Pods', 'Target Support Files', 'Pods-WenDaoNativeProject', name)
+    ['Pods-XingYuanShuiJingNativeProject.debug.xcconfig', 'Pods-XingYuanShuiJingNativeProject.release.xcconfig'].each do |name|
+      xcconfig_path = File.join(__dir__, 'Pods', 'Target Support Files', 'Pods-XingYuanShuiJingNativeProject', name)
       if File.exist?(xcconfig_path)
         content = File.read(xcconfig_path)
         content = content.gsub(/\s*"\$\{PODS_ROOT\}\/\.\.\/\.\.\/node_modules\/react-native-wechat-lib\/ios"\s*/, ' ')
@@ -65,13 +68,13 @@ target 'WenDaoNativeProject' do
     end
 
     # 主工程：真机时链接 WeChat SDK，模拟器时允许未定义符号（不链接 WeChat）
-    main_project_path = File.join(__dir__, 'WenDaoNativeProject.xcodeproj')
+    main_project_path = File.join(__dir__, 'XingYuanShuiJingNativeProject.xcodeproj')
     if File.exist?(main_project_path)
       require 'xcodeproj'
       main_project = Xcodeproj::Project.open(main_project_path)
       wechat_lib_path = '$(SRCROOT)/../node_modules/react-native-wechat-lib/ios'
       main_project.targets.each do |target|
-        next unless target.name == 'WenDaoNativeProject'
+        next unless target.name == 'XingYuanShuiJingNativeProject'
         target.build_configurations.each do |config|
           # 仅真机构建时链接 libWeChatSDK.a
           config.build_settings['LIBRARY_SEARCH_PATHS[sdk=iphoneos*]'] = ['$(inherited)', "\"#{wechat_lib_path}\""]
