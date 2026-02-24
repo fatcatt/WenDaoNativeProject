@@ -14,6 +14,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from './src/pages/Home/index';
+import RecordListScreen from './src/pages/RecordList/index';
 import SettingsScreen from './src/pages/Setting/index';
 import BaziPanScreen from './src/pages/BaziPan/index';
 import styles from './globalStyle.js';
@@ -34,7 +35,10 @@ const TabNavigator = () => {
         <Tab.Navigator
             screenOptions={({route}) => ({
                 tabBarIcon: ({focused}) => {
-                    const iconName = route.name === '星垣水镜' ? 'yin-yang' : 'user-circle';
+                    const iconName =
+                        route.name === '星垣水镜' ? 'yin-yang'
+                        : route.name === '记录' ? 'list-alt'
+                        : 'user-circle';
                     return (
                         <FontAwesome5
                             name={iconName}
@@ -54,6 +58,7 @@ const TabNavigator = () => {
                 },
             })}>
             <Tab.Screen name="星垣水镜" component={HomeScreen} options={{headerShown: false}} />
+            <Tab.Screen name="记录" component={RecordListScreen} options={{headerShown: false}} />
             <Tab.Screen name="我的" component={SettingsScreen} options={{headerShown: false}} />
         </Tab.Navigator>
     );

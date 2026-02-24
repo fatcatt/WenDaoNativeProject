@@ -34,8 +34,9 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<!-- 本地调试时允许 HTTP，真机连 Mac 必须；上架前改为 false 并用 HTTPS -->
 		<key>NSAllowsArbitraryLoads</key>
-		<false/>
+		<true/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
@@ -50,6 +51,7 @@
 		<string>FontAwesome5.ttf</string>
 		<string>FontAwesome5_Regular.ttf</string>
 		<string>FontAwesome5_Solid.ttf</string>
+		<string>Ionicons.ttf</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -80,6 +82,16 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>xingyuanshuijing</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>wechat</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>wx72d5dff4cdd29534</string>
 			</array>
 		</dict>
 	</array>

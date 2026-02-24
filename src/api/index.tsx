@@ -1,11 +1,14 @@
 import axios from 'axios';
 
 const base = 'https://gaocanyixue.com/py';
-// 支付宝支付后端（本地调试）
+// 支付宝/用户接口后端（本地调试）
 const PAY_LOCAL = true; // 打正式包/用线上时改为 false
 // 模拟器用 localhost；真机必须改成你 Mac 的局域网 IP（Mac 与手机同一 WiFi），否则会 Connection refused
-const PAY_LOCAL_HOST = 'http://192.168.18.142:8000'; // 真机调试时改为 http://你的Mac局域网IP:8000（终端 ifconfig 查看）
+const PAY_LOCAL_HOST = 'http://192.168.18.124:8000'; // 真机调试：Mac 局域网 IP（ifconfig 查看），当前 192.168.18.124
 const payBase = PAY_LOCAL ? PAY_LOCAL_HOST : 'https://gaocanyixue.com/py';
+// 用户登录/记录接口与支付同源（本地时走 PAY_LOCAL_HOST）
+const userBase = payBase;
+const LOCAL_REQUEST_TIMEOUT = 30000; // 本地请求超时（毫秒）
 
 // 添加请求拦截器
 axios.interceptors.request.use(
@@ -54,17 +57,24 @@ axios.interceptors.response.use(
 //     }
 // );
 
+const localConfig = PAY_LOCAL ? { timeout: LOCAL_REQUEST_TIMEOUT } : {};
+
 export const getUserData = params => {
-    return axios.get(`${base}/fetch_user_data`, {params: params}).then(res => res.data);
+    return axios.get(`${userBase}/fetch_user_data`, { params, ...localConfig }).then(res => res.data);
 };
 export const setUserData = params => {
-    return axios.post(`${base}/set_login_data`, params).then(res => console.log(res));
+    return axios.post(`${userBase}/set_login_data`, params, localConfig).then(res => res?.data ?? res);
 };
 export const setBaziRecord = params => {
-    return axios.post(`${base}/set_bazi_record`, params).then(res => console.log(res));
+    return axios.post(`${userBase}/set_bazi_record`, params, localConfig).then(res => console.log(res));
 };
 export const getBaziRecord = params => {
-    return axios.get(`${base}/fetch_bazi_record`, {params: params}).then(res => res.data);
+    return axios.get(`${userBase}/fetch_bazi_record`, { params, ...localConfig }).then(res => res.data);
+};
+
+/** 退出登录：通知后端后本地清除 userid/unionid */
+export const logout = params => {
+    return axios.post(`${userBase}/logout`, params || {}, localConfig).then(res => res?.data ?? res);
 };
 
 /**

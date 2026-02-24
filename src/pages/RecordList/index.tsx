@@ -1,0 +1,232 @@
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  SafeAreaView,
+  TextInput,
+  ActivityIndicator,
+} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import moment from 'moment';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUserStore } from '../../store/index';
+import { getBaziRecord } from '../../api/index';
+import { parse } from '../../utils/js/tool';
+import { GanZhiMap } from '../../utils/constants/shensha';
+import styles from './style.js';
+
+const ZODIAC_MAP: Record<string, string> = {
+ 子: '鼠', 丑: '牛', 寅: '虎', 卯: '兔', 辰: '龙', 巳: '蛇',
+ 午: '马', 未: '羊', 申: '猴', 酉: '鸡', 戌: '狗', 亥: '猪',
+};
+
+const COLOR_MAP: Record<string, string> = {
+  Mu: '#2d7a4a', Huo: '#b54a4a', Tu: '#8b6914', Jin: '#c4952c', Shui: '#1a1612',
+};
+
+function formatSolarDate(solar_datetime: string) {
+  try {
+    return moment.utc(solar_datetime).add(0, 'hours').format('阳历YYYY年MM月DD日');
+  } catch {
+    return solar_datetime || '';
+  }
+}
+
+/** 将后端 solar_datetime 转为 BaziPan 可用的 "YYYY-M-D H:mm" */
+function toBaziPanSolarDate(solar_datetime: string | null | undefined): string {
+  if (!solar_datetime) return '';
+  const s = String(solar_datetime).trim();
+  const formats = [
+    'YYYY-MM-DD HH:mm:ss',
+    'YYYY-MM-DDTHH:mm:ss.SSSZ',
+    'YYYY-MM-DDTHH:mm:ss',
+    'YYYY-M-D  H:mm:ss',
+    'YYYY-M-D H:mm:ss',
+    'YYYY-M-D H:mm',
+    'YYYY-MM-DD HH:mm',
+  ];
+  for (const fmt of formats) {
+    const m = moment(s, fmt, true);
+    if (m.isValid()) return m.format('YYYY-M-D H:mm');
+  }
+  const m = moment(s);
+  return m.isValid() ? m.format('YYYY-M-D H:mm') : '';
+}
+
+/** BaziPan 需要 gender 为 'male' | 'female' */
+function toBaziPanGender(gender: string | null | undefined): string {
+  if (!gender) return 'male';
+  const g = String(gender).trim();
+  if (g === '男' || g === 'male') return 'male';
+  if (g === '女' || g === 'female') return 'female';
+  return 'male';
+}
+
+function getZodiacFromBazi(baziSummary: string): string {
+  try {
+    const ob = parse(baziSummary);
+    const dayZhi = ob?.bz_jr?.slice?.(1, 2) || '';
+    return ZODIAC_MAP[dayZhi] || '';
+  } catch {
+    return '';
+  }
+}
+
+function parseBaziLines(baziSummary: string): { gan: string; zhi: string } | null {
+  try {
+    const ob = parse(baziSummary);
+    const gan = (ob?.bz_jn?.slice(0, 1) || '') + (ob?.bz_jy?.slice(0, 1) || '') + (ob?.bz_jr?.slice(0, 1) || '') + (ob?.bz_js?.slice(0, 1) || '');
+    const zhi = (ob?.bz_jn?.slice(-1) || '') + (ob?.bz_jy?.slice(-1) || '') + (ob?.bz_jr?.slice(-1) || '') + (ob?.bz_js?.slice(-1) || '');
+    return { gan, zhi };
+  } catch {
+    return null;
+  }
+}
+
+export default function RecordListScreen({ navigation }: { navigation: any }) {
+  const { userid } = useUserStore();
+  const [records, setRecords] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
+
+  const loadRecords = useCallback(async () => {
+    const uid = userid || (await AsyncStorage.getItem('userid')) || '';
+    if (!uid) {
+      setRecords([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await getBaziRecord({ userid: uid });
+      setRecords(Array.isArray(res) ? res : []);
+    } catch {
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [userid]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadRecords();
+    }, [loadRecords])
+  );
+
+  const filteredRecords = records.filter(
+    (r) =>
+      !searchText.trim() ||
+      (r.nickname && r.nickname.includes(searchText.trim())) ||
+      (r.solar_datetime && String(r.solar_datetime).includes(searchText.trim()))
+  );
+
+  const handlePressRecord = (item: any) => {
+    const solarDate = toBaziPanSolarDate(item.solar_datetime);
+    if (!solarDate) return;
+    navigation.navigate('八字盘', {
+      navigationParams: {
+        solarDate,
+        gender: toBaziPanGender(item.gender),
+        nickname: item.nickname ?? '',
+        id: item.id ?? '',
+      },
+    });
+  };
+
+  const renderBaziLine = (line: string, fontSize: number) => {
+    return (
+      <View style={{ flexDirection: 'row' }}>
+        {line.split('').map((c, i) => {
+          const key = GanZhiMap[c as keyof typeof GanZhiMap];
+          const color = key ? COLOR_MAP[key] : '#1a1612';
+          return (
+            <Text key={`${line}-${i}`} style={{ color, fontSize, fontWeight: '700' }}>
+              {c}
+            </Text>
+          );
+        })}
+      </View>
+    );
+  };
+
+  const renderItem = ({ item }: { item: any }) => {
+    const bazi = parseBaziLines(item.bazi_summary);
+    const zodiac = getZodiacFromBazi(item.bazi_summary);
+    const ganLine = bazi?.gan || '';
+    const zhiLine = bazi?.zhi || '';
+
+    return (
+      <TouchableOpacity
+        style={styles.recordItem}
+        onPress={() => handlePressRecord(item)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.recordLeft}>
+          <View style={styles.recordNameRow}>
+            <Text style={styles.recordNickname}>{item.nickname || '未命名'}</Text>
+            <Text style={styles.recordGender}>{item.gender || ''}</Text>
+          </View>
+          <Text style={styles.recordDate}>{formatSolarDate(item.solar_datetime)}</Text>
+        </View>
+        <View style={styles.recordRight}>
+          <View style={styles.baziWrap}>
+            {renderBaziLine(ganLine, 16)}
+            <View style={{ marginTop: 2 }}>{renderBaziLine(zhiLine, 15)}</View>
+          </View>
+          {zodiac ? (
+            <View style={styles.zodiacCircle}>
+              <Text style={styles.zodiacText}>{zodiac}</Text>
+            </View>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.searchRow}>
+          <View style={styles.searchWrap}>
+            <Icon name="search-outline" size={20} color="#4a4238" style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="请输入搜索的内容"
+              placeholderTextColor="#9a9389"
+              value={searchText}
+              onChangeText={setSearchText}
+            />
+          </View>
+          <TouchableOpacity style={styles.filterBtn}>
+            <Text style={styles.filterBtnText}>筛选</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.categoryRow}>
+        <Text style={styles.categoryLabel}>全部</Text>
+      </View>
+
+      {loading ? (
+        <View style={styles.emptyWrap}>
+          <ActivityIndicator size="large" color="#5c4a3a" />
+        </View>
+      ) : filteredRecords.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <Text style={styles.emptyText}>
+            {!userid ? '请先登录后查看排盘记录' : searchText ? '无匹配记录' : '暂无保存的八字记录'}
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredRecords}
+          renderItem={renderItem}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
+    </SafeAreaView>
+  );
+}

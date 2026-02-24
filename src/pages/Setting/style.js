@@ -71,6 +71,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+  logoutButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.textSecondary,
+  },
+  logoutButtonText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '600',
+  },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',

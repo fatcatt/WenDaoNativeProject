@@ -1,12 +1,9 @@
-import {ScrollView, View, Text, Animated, Button, Alert, Dimensions, Image, TouchableOpacity, SafeAreaView} from 'react-native';
+import {View, Text, Alert, Dimensions, Image, TouchableOpacity, SafeAreaView} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import styles from './style.js';
-import React, {Component, useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useCallback, useRef} from 'react';
 import * as WeChat from 'react-native-wechat-lib';
-import PagerView from 'react-native-pager-view';
-import usePagerView from './usePagerView';
-import Record from './Record/index';
-import {getUserData, setUserData, getBaziRecord, getAlipayOrderStr} from '../../api/index';
+import {getUserData, setUserData, getAlipayOrderStr, logout as apiLogout} from '../../api/index';
 import {pay as alipayPay, setAlipaySandbox, isPaySuccess, getPayResultMessage} from '../../services/alipay';
 import axios from 'axios';
 import DeviceInfo from 'react-native-device-info';
@@ -22,11 +19,8 @@ export default function RNWeChatDemo({navigation}) {
         nickname: '',
         headimg_url: ''
     });
-    const [records, setRecords] = useState([]);
-    const {pagerRef, setPage, page} = usePagerView();
-    const translateX = useRef(new Animated.Value(0)).current; // Animated value for the highlight bar
-
-    const tabWidth = 60; // Width of each tab button, adjust based on your design
+    /** 同一 code 只走一次 getAccessToken -> setUserData，避免 Promise 与 SendAuth.Resp 事件重复触发导致多次请求/400 */
+    const authCodeHandled = useRef<string | null>(null);
     useFocusEffect(
         React.useCallback(() => {
             const deviceId = DeviceInfo.getDeviceId();
@@ -42,6 +36,12 @@ export default function RNWeChatDemo({navigation}) {
         }, [])
     );
 
+    // 监听微信授权返回事件（从微信切回 App 时 native 会发 SendAuth.Resp，确保能走到 setUserData）
+    useEffect(() => {
+        const sub = WeChat.addListener('SendAuth.Resp', handleWeChatAuthResp);
+        return () => sub.remove();
+    }, []);
+
     const getUnionid = async () => {
         try {
             const jsonValue = await AsyncStorage.getItem('unionid');
@@ -54,28 +54,32 @@ export default function RNWeChatDemo({navigation}) {
         }
     };
 
+    // 微信回调：从后台回到 App 时可能通过事件收到 code，补发一次拉 token -> 存库 -> 刷新用户
+    const handleWeChatAuthResp = (resp: { code?: string }) => {
+        if (!resp?.code) return;
+        if (authCodeHandled.current === resp.code) return;
+        authCodeHandled.current = resp.code;
+        getAccessToken(WECHAT_APP_ID, WECHAT_APP_SECRET, resp.code);
+    };
+
     function handleFetchUser(unionid: string) {
         getUserData({unionid})
             .then(async res => {
                 setUserInfo(res);
-                handleGetBaziRecord(res.user_id);
                 setUserId(res.user_id);
                 await AsyncStorage.setItem('userid', res.user_id.toString() || '');
             })
             .catch(err => console.log(err));
     }
 
-    const handleGetBaziRecord = user_id => {
-        getBaziRecord({userid: user_id}).then(res => {
-            setRecords(res);
-        });
-    };
-
     // 登录相关
     const handleLogin = () => {
+        authCodeHandled.current = null; // 新一轮登录允许处理
         WeChat.sendAuthRequest('snsapi_userinfo', '')
             .then((response: any) => {
-                // todo 登录 response.code
+                if (!response?.code) return;
+                if (authCodeHandled.current === response.code) return;
+                authCodeHandled.current = response.code;
                 getAccessToken(WECHAT_APP_ID, WECHAT_APP_SECRET, response.code);
             })
             .catch(error => {
@@ -108,12 +112,27 @@ export default function RNWeChatDemo({navigation}) {
             .get(url)
             .then(response => {
                 const {data} = response;
-                storeUnionid(data.unionid);
-                setUserData(data)
-                    .then(res => {})
-                    .catch(err => {});
+                if (!data || !data.unionid) {
+                    if (data?.errcode) console.warn('getUserInfo err', data.errcode, data.errmsg);
+                    return;
+                }
+                const unionid = data.unionid;
+                storeUnionid(unionid);
+                setUserData({
+                    nickname: data.nickname,
+                    unionid,
+                    headimgurl: data.headimgurl,
+                })
+                    .then(() => {
+                        handleFetchUser(unionid);
+                    })
+                    .catch(err => {
+                        console.warn('setUserData failed', err);
+                    });
             })
-            .catch(error => {});
+            .catch(error => {
+                console.warn('getUserInfo failed', error);
+            });
     }
 
     const storeUnionid = async (unionid: string) => {
@@ -122,6 +141,26 @@ export default function RNWeChatDemo({navigation}) {
         } catch (e) {
             // saving error
         }
+    };
+
+    const handleLogout = async () => {
+        Alert.alert('退出登录', '确定要退出登录吗？', [
+            { text: '取消', style: 'cancel' },
+            {
+                text: '确定',
+                onPress: async () => {
+                    try {
+                        const uid = await AsyncStorage.getItem('userid');
+                        const unionid = await AsyncStorage.getItem('unionid');
+                        await apiLogout({ userid: uid || undefined, unionid: unionid || undefined });
+                    } catch (_) {}
+                    await AsyncStorage.removeItem('userid');
+                    await AsyncStorage.removeItem('unionid');
+                    setUserId('');
+                    setUserInfo({ nickname: '', headimg_url: '' });
+                },
+            },
+        ]);
     };
 
     // 设为 true 时：不请求后端，用占位订单串仅测试「调起支付宝」是否成功（支付宝内会报错属正常）
@@ -154,21 +193,6 @@ export default function RNWeChatDemo({navigation}) {
         }
     };
 
-    const setPageInfo = tabNum => {
-        setPage(tabNum);
-    };
-
-    const handlePageScroll = e => {
-        const offset = e.nativeEvent.offset; // Page scroll offset (0.0 to 1.0)
-        const position = e.nativeEvent.position; // Current page position
-        const animatedValue = position * tabWidth + offset * tabWidth; // Calculate where the bar should be
-        Animated.timing(translateX, {
-            toValue: animatedValue,
-            duration: 0, // No delay for smooth transition
-            useNativeDriver: true
-        }).start();
-    };
-
     return (
         <SafeAreaView style={styles.settingWrapper}>
             {/* 用户卡片 */}
@@ -190,7 +214,11 @@ export default function RNWeChatDemo({navigation}) {
                         )}
                     </View>
                 </View>
-                {!userInfo?.headimg_url && (
+                {userInfo?.headimg_url ? (
+                    <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
+                        <Text style={styles.logoutButtonText}>退出登录</Text>
+                    </TouchableOpacity>
+                ) : (
                     <TouchableOpacity style={styles.loginButton} onPress={handleLogin} activeOpacity={0.8}>
                         <Text style={styles.loginButtonText}>微信登录</Text>
                     </TouchableOpacity>
@@ -213,34 +241,6 @@ export default function RNWeChatDemo({navigation}) {
                 </View>
             </View>
 
-            {/* 我的记录 */}
-            <View style={styles.recordSection}>
-                <Text style={styles.recordSectionTitle}>我的记录</Text>
-                <View style={styles.tabs}>
-                    <TouchableOpacity style={styles.tabsButton} onPress={() => setPageInfo(0)}>
-                        <Text style={page === 0 ? styles.buttonTextHl : styles.buttonText}>记录</Text>
-                    </TouchableOpacity>
-                    <View style={styles.highlightBarWrapper}>
-                        <Animated.View
-                            style={[styles.highlightBar, { transform: [{ translateX }] }]}
-                        />
-                    </View>
-                </View>
-                <PagerView
-                    ref={pagerRef}
-                    style={styles.pagerView}
-                    initialPage={0}
-                    onPageSelected={e => setPageInfo(e.nativeEvent.position)}
-                    onPageScroll={handlePageScroll}>
-                    <View key="1" style={[styles.page, { flex: 1 }]}>
-                        {!userInfo.headimg_url ? (
-                            <Text style={styles.emptyHint}>登录后可查看排盘记录</Text>
-                        ) : (
-                            <Record passingRecords={records} navigation={navigation} />
-                        )}
-                    </View>
-                </PagerView>
-            </View>
         </SafeAreaView>
     );
 }
