@@ -130,6 +130,24 @@ const styles = StyleSheet.create({
   baziWrap: {
     marginRight: 12,
   },
+  baziRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  baziColumn: {
+    width: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  baziGan: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  baziZhi: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 2,
+  },
   zodiacCircle: {
     width: 36,
     height: 36,

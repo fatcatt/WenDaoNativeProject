@@ -135,16 +135,25 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
     });
   };
 
-  const renderBaziLine = (line: string, fontSize: number) => {
+  /** 按列渲染八字，每列固定宽度，上下天干地支对齐 */
+  const renderBaziColumns = (ganLine: string, zhiLine: string) => {
+    const ganChars = ganLine.split('');
+    const zhiChars = zhiLine.split('');
+    const count = Math.max(ganChars.length, zhiChars.length, 4);
     return (
-      <View style={{ flexDirection: 'row' }}>
-        {line.split('').map((c, i) => {
-          const key = GanZhiMap[c as keyof typeof GanZhiMap];
-          const color = key ? COLOR_MAP[key] : '#1a1612';
+      <View style={styles.baziRow}>
+        {Array.from({ length: count }, (_, i) => {
+          const gan = ganChars[i] || '';
+          const zhi = zhiChars[i] || '';
+          const ganKey = GanZhiMap[gan as keyof typeof GanZhiMap];
+          const zhiKey = GanZhiMap[zhi as keyof typeof GanZhiMap];
+          const ganColor = ganKey ? COLOR_MAP[ganKey] : '#1a1612';
+          const zhiColor = zhiKey ? COLOR_MAP[zhiKey] : '#1a1612';
           return (
-            <Text key={`${line}-${i}`} style={{ color, fontSize, fontWeight: '700' }}>
-              {c}
-            </Text>
+            <View key={i} style={styles.baziColumn}>
+              <Text style={[styles.baziGan, { color: ganColor }]}>{gan}</Text>
+              <Text style={[styles.baziZhi, { color: zhiColor }]}>{zhi}</Text>
+            </View>
           );
         })}
       </View>
@@ -172,8 +181,7 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
         </View>
         <View style={styles.recordRight}>
           <View style={styles.baziWrap}>
-            {renderBaziLine(ganLine, 16)}
-            <View style={{ marginTop: 2 }}>{renderBaziLine(zhiLine, 15)}</View>
+            {renderBaziColumns(ganLine, zhiLine)}
           </View>
           {zodiac ? (
             <View style={styles.zodiacCircle}>
