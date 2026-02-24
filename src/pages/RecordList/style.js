@@ -81,6 +81,36 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 24,
   },
+  swipeRowWrap: {
+    overflow: 'hidden',
+    marginTop: 8,
+    borderRadius: 10,
+    position: 'relative',
+  },
+  swipeActions: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 72,
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  swipeActionDelete: {
+    flex: 1,
+    backgroundColor: '#c0392b',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swipeActionText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  swipeContent: {
+    width: '100%',
+    backgroundColor: colors.card,
+  },
   recordItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -88,7 +118,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    marginTop: 8,
     borderRadius: 10,
     ...Platform.select({
       ios: {

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,10 @@ import {
   SafeAreaView,
   TextInput,
   ActivityIndicator,
+  Animated,
+  PanResponder,
+  Easing,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
@@ -14,7 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { rootNavigationRef } from '../../navigationRef';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from '../../store/index';
-import { getBaziRecord } from '../../api/index';
+import { getBaziRecord, deleteBaziRecord } from '../../api/index';
 import { parse } from '../../utils/js/tool';
 import { GanZhiMap } from '../../utils/constants/shensha';
 import styles from './style.js';
@@ -88,6 +92,95 @@ function parseBaziLines(baziSummary: string): { gan: string; zhi: string } | nul
   }
 }
 
+const SWIPE_ACTION_WIDTH = 72;
+const SWIPE_THRESHOLD = SWIPE_ACTION_WIDTH / 2;
+/** 水平滑动多少 px 就接管（越小越灵敏，4 约等于轻轻一滑就触发） */
+const HORIZONTAL_SLOP = 1;
+
+function SwipeableRecordRow({
+  children,
+  onPress,
+  onDelete,
+}: {
+  children: React.ReactNode;
+  onPress: () => void;
+  onDelete: () => void;
+}) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const offsetRef = useRef(0);
+  const startRef = useRef(0);
+
+  useEffect(() => {
+    const id = translateX.addListener(({ value }) => {
+      offsetRef.current = value;
+    });
+    return () => translateX.removeListener(id);
+  }, [translateX]);
+
+  const runSnap = useCallback((toValue: number) => {
+    Animated.timing(translateX, {
+      toValue,
+      duration: 220,
+      useNativeDriver: true,
+      easing: Easing.out(Easing.cubic),
+    }).start(() => {
+      offsetRef.current = toValue;
+    });
+  }, [translateX]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, g) => {
+        const absDx = Math.abs(g.dx);
+        const absDy = Math.abs(g.dy);
+        return absDx >= HORIZONTAL_SLOP && absDx >= absDy;
+      },
+      onPanResponderGrant: () => {
+        startRef.current = offsetRef.current;
+      },
+      onPanResponderMove: (_, g) => {
+        const next = Math.max(-SWIPE_ACTION_WIDTH, Math.min(0, startRef.current + g.dx));
+        translateX.setValue(next);
+      },
+      onPanResponderRelease: (_, g) => {
+        const current = startRef.current + g.dx;
+        const toValue = current < -SWIPE_THRESHOLD ? -SWIPE_ACTION_WIDTH : 0;
+        runSnap(toValue);
+      },
+      onPanResponderTerminate: () => {
+        const current = offsetRef.current;
+        runSnap(current < -SWIPE_THRESHOLD ? -SWIPE_ACTION_WIDTH : 0);
+      },
+    })
+  ).current;
+
+  return (
+    <View style={styles.swipeRowWrap}>
+      <View style={styles.swipeActions}>
+        <TouchableOpacity
+          style={styles.swipeActionDelete}
+          onPress={() => {
+            translateX.setValue(0);
+            onDelete();
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.swipeActionText}>删除</Text>
+        </TouchableOpacity>
+      </View>
+      <Animated.View
+        style={[styles.swipeContent, { transform: [{ translateX }] }]}
+        {...panResponder.panHandlers}
+      >
+        <TouchableOpacity style={styles.recordItem} onPress={onPress} activeOpacity={1}>
+          {children}
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
+
 export default function RecordListScreen({ navigation }: { navigation: any }) {
   const { userid } = useUserStore();
   const [records, setRecords] = useState<any[]>([]);
@@ -122,6 +215,33 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
       !searchText.trim() ||
       (r.nickname && r.nickname.includes(searchText.trim())) ||
       (r.solar_datetime && String(r.solar_datetime).includes(searchText.trim()))
+  );
+
+  const handleDeleteRecord = useCallback(
+    (item: any) => {
+      Alert.alert(
+        '确认删除',
+        '确定要删除这条记录吗？',
+        [
+          { text: '取消', style: 'cancel' },
+          {
+            text: '确定删除',
+            style: 'destructive',
+            onPress: async () => {
+              const uid = userid || (await AsyncStorage.getItem('userid')) || '';
+              if (!uid) return;
+              try {
+                await deleteBaziRecord({ id: item.id, userid: uid });
+                setRecords((prev) => prev.filter((r) => r.id !== item.id));
+              } catch {
+                Alert.alert('删除失败');
+              }
+            },
+          },
+        ]
+      );
+    },
+    [userid]
   );
 
   const handlePressRecord = (item: any) => {
@@ -179,29 +299,30 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
     const zhiLine = bazi?.zhi || '';
 
     return (
-      <TouchableOpacity
-        style={styles.recordItem}
+      <SwipeableRecordRow
         onPress={() => handlePressRecord(item)}
-        activeOpacity={0.7}
+        onDelete={() => handleDeleteRecord(item)}
       >
-        <View style={styles.recordLeft}>
-          <View style={styles.recordNameRow}>
-            <Text style={styles.recordNickname}>{item.nickname || '未命名'}</Text>
-            <Text style={styles.recordGender}>{item.gender === 'male' ? '男' : item.gender === 'female' ? '女' : (item.gender || '')}</Text>
-          </View>
-          <Text style={styles.recordDate}>{formatSolarDate(item.solar_datetime)}</Text>
-        </View>
-        <View style={styles.recordRight}>
-          <View style={styles.baziWrap}>
-            {renderBaziColumns(ganLine, zhiLine)}
-          </View>
-          {zodiac ? (
-            <View style={styles.zodiacCircle}>
-              <Text style={styles.zodiacText}>{zodiac}</Text>
+        <>
+          <View style={styles.recordLeft}>
+            <View style={styles.recordNameRow}>
+              <Text style={styles.recordNickname}>{item.nickname || '未命名'}</Text>
+              <Text style={styles.recordGender}>{item.gender === 'male' ? '男' : item.gender === 'female' ? '女' : (item.gender || '')}</Text>
             </View>
-          ) : null}
-        </View>
-      </TouchableOpacity>
+            <Text style={styles.recordDate}>{formatSolarDate(item.solar_datetime)}</Text>
+          </View>
+          <View style={styles.recordRight}>
+            <View style={styles.baziWrap}>
+              {renderBaziColumns(ganLine, zhiLine)}
+            </View>
+            {zodiac ? (
+              <View style={styles.zodiacCircle}>
+                <Text style={styles.zodiacText}>{zodiac}</Text>
+              </View>
+            ) : null}
+          </View>
+        </>
+      </SwipeableRecordRow>
     );
   };
 

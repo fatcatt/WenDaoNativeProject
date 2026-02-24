@@ -4,7 +4,7 @@ const base = 'https://gaocanyixue.com/py';
 // 支付宝/用户接口后端（本地调试）
 const PAY_LOCAL = true; // 打正式包/用线上时改为 false
 // 模拟器用 localhost；真机必须改成你 Mac 的局域网 IP（Mac 与手机同一 WiFi），否则会 Connection refused
-const PAY_LOCAL_HOST = 'http://192.168.18.124:8000'; // 真机调试：Mac 局域网 IP（ifconfig 查看），当前 192.168.18.124
+const PAY_LOCAL_HOST = 'http://192.168.18.142:8000'; // 真机调试：Mac 局域网 IP（ifconfig 查看），当前 192.168.18.124
 const payBase = PAY_LOCAL ? PAY_LOCAL_HOST : 'https://gaocanyixue.com/py';
 // 用户登录/记录接口与支付同源（本地时走 PAY_LOCAL_HOST）
 const userBase = payBase;
@@ -74,7 +74,7 @@ export const updateBaziRecord = params => {
 };
 /** 删除一条八字记录（取消收藏）：需传 id、userid */
 export const deleteBaziRecord = params => {
-    return axios.delete(`${userBase}/delete_bazi_record`, { ...localConfig, data: params }).then(res => res?.data ?? res);
+    return axios.delete(`${userBase}/delete_bazi_record`, { ...localConfig, params }).then(res => res?.data ?? res);
 };
 export const getBaziRecord = params => {
     return axios.get(`${userBase}/fetch_bazi_record`, { params, ...localConfig }).then(res => res.data);
