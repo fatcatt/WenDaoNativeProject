@@ -6,7 +6,7 @@ import {JD, J2000, radd, int2} from '../../utils/eph0.js';
 import {year2Ayear, timeStr2hour} from '../../utils/tools.js';
 import {getShenSha} from '../../utils/calcBazi';
 import calendar from 'js-calendar-converter';
-import {Lunar1} from '../../utils/lunar1';
+import {Lunar, LunarUtil} from 'lunar-javascript';
 import {setBaziRecord} from '../../api/index';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {GanZhiMap, simShishen} from '../../utils/constants/shensha';
@@ -15,6 +15,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import {geju} from '../../utils/constants/geju.js';
 import {yongshen} from '../../utils/constants/yongshen.js';
+
+// 地支藏干（本气），用于大运支十神，兼容 lunar-javascript 的 ZHI_HIDE_GAN 键为占位符的情况
+const ZHI_HIDE_GAN_CN: Record<string, string[]> = {
+    '子': ['癸'], '丑': ['己', '癸', '辛'], '寅': ['甲', '丙', '戊'], '卯': ['乙'],
+    '辰': ['戊', '乙', '癸'], '巳': ['丙', '庚', '戊'], '午': ['丁', '己'], '未': ['己', '丁', '乙'],
+    '申': ['庚', '壬', '戊'], '酉': ['辛'], '戌': ['戊', '辛', '丁'], '亥': ['壬', '甲']
+};
+
 function BaziPanScreen({route}) {
     const navigation = useNavigation();
     const curTZ = -8; //当前时区
@@ -24,7 +32,8 @@ function BaziPanScreen({route}) {
     const [BZ_result, setBZ_result] = useState({});
     // 使用 Animated.Value 来管理背景透明度
     const [animatedValues, setAnimatedValues] = useState([]);
-    const [isSaved, setIsSaved] = useState(false);
+    // 从记录点开时带 id，说明该盘已在收藏表中，初始为已收藏
+    const [isSaved, setIsSaved] = useState(!!id);
     const [notice, setNotice] = useState(false);
     const [remark, setRemark] = useState('');
     const [gejuModalVisible, setGejuModalVisible] = useState(false);
@@ -74,7 +83,7 @@ function BaziPanScreen({route}) {
         const [year, month, day] = solarDate.split(/[-\s:]/);
         const lunarDate = calendar.solar2lunar(year, month, day).lunarDate + ' ' + datetime;
         setlunardate(lunarDate);
-        const lu = Lunar1().Lunar.fromDate(moment(solarDate, 'YYYY-M-D H').toDate());
+        const lu = Lunar.fromDate(moment(solarDate, 'YYYY-M-D H').toDate());
         var d = lu.getEightChar();
         // form表单中的date有时是阴历，有时是阳历；这里使用排盘专用的阳历.以下是排八字
         const [Cml_y, Cml_m, Cml_d] = solarDate.split(/[-\s:]/);
@@ -86,22 +95,27 @@ function BaziPanScreen({route}) {
         // 运
         var dayun = [];
         var yun = d.getYun(gender === 'male' ? 1 : 0);
-        const getDaYun = yun.getDaYun();
-        for (let i = 0; i < 11; i++) {
-            if (getDaYun[i].getGanZhi()) {
-                var hideGan = Lunar1().LunarUtil.ZHI_HIDE_GAN[getDaYun[i].getGanZhi().slice(1, 2)];
-            }
+        const getDaYun = yun.getDaYun() || [];
+        const dayunLen = Math.min(getDaYun.length, 11);
+        for (let i = 0; i < dayunLen; i++) {
+            const dy = getDaYun[i];
+            if (!dy) continue;
+            const ganZhi = dy.getGanZhi && dy.getGanZhi();
+            const zhiChar = ganZhi ? ganZhi.slice(1, 2) : '';
+            const hideGanRaw = (zhiChar && LunarUtil.ZHI_HIDE_GAN && LunarUtil.ZHI_HIDE_GAN[zhiChar]);
+            const hideGan = Array.isArray(hideGanRaw) ? hideGanRaw : (ZHI_HIDE_GAN_CN[zhiChar] || []);
+            const hideGan0 = hideGan[0] || '';
             dayun.push({
                 qiyun: '出生' + yun.getStartYear() + '年' + yun.getStartMonth() + '个月' + yun.getStartDay() + '天后起运',
-                ganzhi: getDaYun[i].getGanZhi(),
-                startYear: getDaYun[i].getStartYear(),
-                endYear: getDaYun[i].getEndYear(),
-                startAge: getDaYun[i].getStartAge(),
-                endAge: getDaYun[i].getEndAge(),
-                liuNian: getDaYun[i].getLiuNian(),
-                xiaoYun: getDaYun[i].getXiaoYun(),
-                ganShishen: getDaYun[i].getGanZhi() ? Lunar1().LunarUtil.SHI_SHEN_GAN[ob?.bz_jr?.slice(0, 1) + getDaYun[i].getGanZhi().slice(0, 1)] : '',
-                zhiShishen: getDaYun[i].getGanZhi() ? Lunar1().LunarUtil.SHI_SHEN_ZHI[ob?.bz_jr?.slice(0, 1) + hideGan[0]] : ''
+                ganzhi: ganZhi || '',
+                startYear: dy.getStartYear ? dy.getStartYear() : 0,
+                endYear: dy.getEndYear ? dy.getEndYear() : 0,
+                startAge: dy.getStartAge ? dy.getStartAge() : 0,
+                endAge: dy.getEndAge ? dy.getEndAge() : 0,
+                liuNian: dy.getLiuNian ? dy.getLiuNian() : [],
+                xiaoYun: dy.getXiaoYun ? dy.getXiaoYun() : [],
+                ganShishen: (ganZhi && ob?.bz_jr && LunarUtil.SHI_SHEN) ? (LunarUtil.SHI_SHEN[ob.bz_jr.slice(0, 1) + ganZhi.slice(0, 1)] || '') : '',
+                zhiShishen: (ganZhi && ob?.bz_jr && hideGan0 && LunarUtil.SHI_SHEN) ? (LunarUtil.SHI_SHEN[ob.bz_jr.slice(0, 1) + hideGan0] || '') : ''
             });
         }
         // 藏干
@@ -137,15 +151,22 @@ function BaziPanScreen({route}) {
         let minggong = d.getMingGong();
         let shengong = d.getShenGong();
         // 节气
-        let jieqi;
+        let jieqi = '';
         const [lunarCml_y, lunarCml_m, lunarCml_d] = lunarDate.split(/[-\s:]/);
-        var d = Lunar1().Lunar.fromYmd(lunarCml_y, lunarCml_m, lunarCml_d);
-        if (d.getCurrentJieQi()) {
-            jieqi = '出生于' + d.getCurrentJieQi()._p.name + '0天';
+        const lunarDayObj = Lunar.fromYmd(lunarCml_y, lunarCml_m, lunarCml_d);
+        const currentJq = lunarDayObj && lunarDayObj.getCurrentJieQi && lunarDayObj.getCurrentJieQi();
+        if (currentJq) {
+            const name = (currentJq.getName && currentJq.getName()) || (currentJq._p && currentJq._p.name) || '';
+            jieqi = '出生于' + name + '0天';
         } else {
-            let prev = d.getPrevJieQi(false);
-            let diff = moment(solarDate, 'YYYY-M-D H').diff(moment(prev.getSolar().toYmdHms()), 'days');
-            jieqi = '出生于' + prev.getName() + '后' + diff + '天';
+            const prev = lunarDayObj && lunarDayObj.getPrevJieQi && lunarDayObj.getPrevJieQi(false);
+            if (prev) {
+                const solar = prev.getSolar && prev.getSolar();
+                const prevName = (prev.getName && prev.getName()) || (prev._p && prev._p.name) || '';
+                const prevYmd = solar && solar.toYmdHms ? solar.toYmdHms() : solarDate;
+                const diff = moment(solarDate, 'YYYY-M-D H').diff(moment(prevYmd), 'days');
+                jieqi = '出生于' + prevName + '后' + diff + '天';
+            }
         }
         // ---------------------我是分割-----------------------
 
@@ -418,7 +439,7 @@ function BaziPanScreen({route}) {
                                                                 <Text style={styles.yunFont}>{e.ganzhi.slice(0, 1)}</Text>
                                                                 <Text style={styles.yunFont}>{e.ganzhi.slice(1, 2)}</Text>
                                                             </View>
-                                                            <Text style={styles.startWithText}>{e.ganShishen ? simShishen[e.ganShishen] + simShishen[e.zhiShishen] : '小运'}</Text>
+                                                            <Text style={styles.startWithText}>{e.ganShishen ? ((simShishen[e.ganShishen] || '') + (simShishen[e.zhiShishen] || '')) : '小运'}</Text>
                                                         </View>
                                                     ) : (
                                                         <View>

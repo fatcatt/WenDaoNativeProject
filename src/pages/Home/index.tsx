@@ -11,10 +11,9 @@ import styles from './style.js';
 import moment from 'moment';
 import {Gan, YangGan, YangZhi, YinZhi} from '../../utils/constants/shensha';
 import calendar from 'js-calendar-converter';
-import {Lunar1} from '../../utils/lunar1';
+import {Lunar, Solar} from 'lunar-javascript';
 import SelectDropdown from 'react-native-select-dropdown';
 import Clipboard from '@react-native-clipboard/clipboard';
-// import {Lunar1} from '../../../lll.js';
 const reducer = (inputFrom, action) => {
     switch (action.type) {
         case 'UPDATE_NAME':
@@ -92,7 +91,7 @@ export default function HomeScreen({navigation}) {
     const [contact, setContact] = useState('');
 
     const handleCalaFantui = () => {
-        var l = Lunar1().Solar.fromBaZi(ftBaziInfo.nianGan + ftBaziInfo.nianZhi, ftBaziInfo.yueGan + ftBaziInfo.yueZhi, ftBaziInfo.riGan + ftBaziInfo.riZhi, ftBaziInfo.shiGan + ftBaziInfo.shiZhi);
+        var l = Solar.fromBaZi(ftBaziInfo.nianGan + ftBaziInfo.nianZhi, ftBaziInfo.yueGan + ftBaziInfo.yueZhi, ftBaziInfo.riGan + ftBaziInfo.riZhi, ftBaziInfo.shiGan + ftBaziInfo.shiZhi);
         const ftres = [];
         for (var i = 0, j = l.length; i < j; i++) {
             let d = l[i];
@@ -267,7 +266,7 @@ export default function HomeScreen({navigation}) {
     命理八字计算
     **********************/
     async function ML_calc() {
-        const lu = Lunar1().Lunar.fromDate(moment(solarDate + ' ' + inputFrom.inputTime, 'YYYY-M-D H').toDate());
+        const lu = Lunar.fromDate(moment(solarDate + ' ' + inputFrom.inputTime, 'YYYY-M-D H').toDate());
         var d = lu.getEightChar();
 
         // ---------------------我是分割-----------------------
