@@ -48,6 +48,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingVertical: 0,
   },
+  searchClearBtn: {
+    paddingLeft: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   filterBtn: {
     paddingVertical: 8,
     paddingHorizontal: 14,

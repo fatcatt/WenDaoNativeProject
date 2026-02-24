@@ -339,6 +339,15 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
               value={searchText}
               onChangeText={setSearchText}
             />
+            {searchText.length > 0 ? (
+              <TouchableOpacity
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={() => setSearchText('')}
+                style={styles.searchClearBtn}
+              >
+                <Icon name="close-circle" size={20} color="#9a9389" />
+              </TouchableOpacity>
+            ) : null}
           </View>
           <TouchableOpacity style={styles.filterBtn}>
             <Text style={styles.filterBtnText}>筛选</Text>
