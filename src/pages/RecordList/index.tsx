@@ -11,6 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { useFocusEffect } from '@react-navigation/native';
+import { rootNavigationRef } from '../../navigationRef';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserStore } from '../../store/index';
 import { getBaziRecord } from '../../api/index';
@@ -45,6 +46,7 @@ function toBaziPanSolarDate(solar_datetime: string | null | undefined): string {
     'YYYY-MM-DDTHH:mm:ss',
     'YYYY-M-D  H:mm:ss',
     'YYYY-M-D H:mm:ss',
+    'YYYY-M-D  H:m:s',
     'YYYY-M-D H:mm',
     'YYYY-MM-DD HH:mm',
   ];
@@ -53,7 +55,7 @@ function toBaziPanSolarDate(solar_datetime: string | null | undefined): string {
     if (m.isValid()) return m.format('YYYY-M-D H:mm');
   }
   const m = moment(s);
-  return m.isValid() ? m.format('YYYY-M-D H:mm') : '';
+  return m.isValid() ? m.format('YYYY-M-D H:mm') : s || '';
 }
 
 /** BaziPan 需要 gender 为 'male' | 'female' */
@@ -123,16 +125,26 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
   );
 
   const handlePressRecord = (item: any) => {
-    const solarDate = toBaziPanSolarDate(item.solar_datetime);
-    if (!solarDate) return;
-    navigation.navigate('八字盘', {
+    const solarDate = toBaziPanSolarDate(item.solar_datetime) || String(item.solar_datetime || '').trim() || '';
+    const params = {
       navigationParams: {
-        solarDate,
+        solarDate: solarDate || moment().format('YYYY-M-D H:mm'),
         gender: toBaziPanGender(item.gender),
         nickname: item.nickname ?? '',
         id: item.id ?? '',
       },
-    });
+    };
+    if (rootNavigationRef?.isReady?.() && rootNavigationRef.navigate) {
+      rootNavigationRef.navigate('八字盘', params);
+      return;
+    }
+    let nav: any = navigation;
+    while (nav?.getParent?.()) nav = nav.getParent();
+    if (nav?.navigate) {
+      nav.navigate('八字盘', params);
+    } else {
+      navigation.navigate('八字盘', params);
+    }
   };
 
   /** 按列渲染八字，每列固定宽度，上下天干地支对齐 */
@@ -175,7 +187,7 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
         <View style={styles.recordLeft}>
           <View style={styles.recordNameRow}>
             <Text style={styles.recordNickname}>{item.nickname || '未命名'}</Text>
-            <Text style={styles.recordGender}>{item.gender || ''}</Text>
+            <Text style={styles.recordGender}>{item.gender === 'male' ? '男' : item.gender === 'female' ? '女' : (item.gender || '')}</Text>
           </View>
           <Text style={styles.recordDate}>{formatSolarDate(item.solar_datetime)}</Text>
         </View>

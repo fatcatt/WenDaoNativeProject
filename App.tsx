@@ -11,6 +11,7 @@ import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, useColorScheme, V
 
 import {Colors, DebugInstructions, Header, LearnMoreLinks, ReloadInstructions} from 'react-native/Libraries/NewAppScreen';
 import {NavigationContainer} from '@react-navigation/native';
+import {rootNavigationRef} from './src/navigationRef';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from './src/pages/Home/index';
@@ -67,7 +68,7 @@ const TabNavigator = () => {
 function App() {
     return (
         <View style={styles.body}>
-            <NavigationContainer>
+            <NavigationContainer ref={rootNavigationRef}>
                 <Stack.Navigator screenOptions={{headerShown: false}}>
                     <Stack.Screen name="back" component={TabNavigator} options={{headerShown: false}}></Stack.Screen>
                     <Stack.Screen name="八字盘" component={BaziPanScreen} options={{headerShown: false}} />

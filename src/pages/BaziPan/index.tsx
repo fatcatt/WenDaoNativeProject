@@ -7,7 +7,7 @@ import {year2Ayear, timeStr2hour} from '../../utils/tools.js';
 import {getShenSha} from '../../utils/calcBazi';
 import calendar from 'js-calendar-converter';
 import {Lunar, LunarUtil} from 'lunar-javascript';
-import {setBaziRecord} from '../../api/index';
+import {setBaziRecord, updateBaziRecord, deleteBaziRecord} from '../../api/index';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {GanZhiMap, simShishen} from '../../utils/constants/shensha';
 import styles from './style.js';
@@ -26,15 +26,18 @@ const ZHI_HIDE_GAN_CN: Record<string, string[]> = {
 function BaziPanScreen({route}) {
     const navigation = useNavigation();
     const curTZ = -8; //当前时区
-    const {solarDate, gender, nickname, id = ''} = route.params.navigationParams;
+    const {solarDate, gender, nickname, id: routeId = '', autoSaveAfterEdit} = route.params.navigationParams || {};
+    const id = routeId;
     const [Cp11_J, setCp11_J] = useState('120');
     const [ob, setBazi] = useState({});
     const [BZ_result, setBZ_result] = useState({});
     // 使用 Animated.Value 来管理背景透明度
     const [animatedValues, setAnimatedValues] = useState([]);
-    // 从记录点开时带 id，说明该盘已在收藏表中，初始为已收藏
+    // 从记录点开时带 id，说明该盘已在收藏表中，初始为已收藏；新建后收藏会得到 createdRecordId
     const [isSaved, setIsSaved] = useState(!!id);
+    const [createdRecordId, setCreatedRecordId] = useState<string | number | null>(null);
     const [notice, setNotice] = useState(false);
+    const [noticeMsg, setNoticeMsg] = useState('保存成功');
     const [remark, setRemark] = useState('');
     const [gejuModalVisible, setGejuModalVisible] = useState(false);
     const [lunardata, setlunardate] = useState();
@@ -173,20 +176,68 @@ function BaziPanScreen({route}) {
         setBazi(ob);
         const shensha = getShenSha(ob, gender);
         setBZ_result({ob, dayun, solarDate: solarDate, lunarDate: lunarDate, jieqi, canggan, shishen, nayin, gender, taiyuan, minggong, shengong, shensha, zhangsheng});
-        // const dayun = getDaYun(gender, ob.bz_jy, ob.bz_jr);
-        // getNianLi(Cml_y);
-        // const userid = await AsyncStorage.getItem('userid');
-        // setBaziRecord({userid, nickname, gender: gender, solar_datetime: solarDate, bazi_summary: JSON.stringify(ob), place: ''}).then(res => {});
+        // 仅当从首页「编辑」进入并点击「开始排盘」时才自动保存一次；从记录列表点进只查看，不调 update
+        if (id && autoSaveAfterEdit) {
+            (async () => {
+                const userid = await AsyncStorage.getItem('userid');
+                if (userid) {
+                    try {
+                        await updateBaziRecord({
+                            id,
+                            userid,
+                            nickname,
+                            gender,
+                            solar_datetime: solarDate,
+                            bazi_summary: JSON.stringify(ob),
+                            place: '',
+                            remark
+                        });
+                        setIsSaved(true);
+                    } catch (_) {}
+                }
+            })();
+        }
     }
 
     const toggleSwitch = async () => {
         const userid = await AsyncStorage.getItem('userid');
-        if (!isSaved && userid) {
-            setBaziRecord({userid, nickname, gender: gender, solar_datetime: solarDate, bazi_summary: JSON.stringify(ob), place: '', remark}).then(res => {
+        const recordId = id || createdRecordId;
+        if (isSaved && recordId && userid) {
+            // 已收藏：点击取消收藏
+            deleteBaziRecord({ id: recordId, userid }).then(() => {
+                setIsSaved(false);
+                if (createdRecordId != null) setCreatedRecordId(null);
+                setNoticeMsg('已取消收藏');
                 setNotice(true);
                 setTimeout(() => setNotice(false), 800);
-            });
-            setIsSaved(!isSaved);
+            }).catch(() => Alert.alert('取消收藏失败'));
+        } else if (!isSaved && userid) {
+            const payload = {
+                userid,
+                nickname,
+                gender,
+                solar_datetime: solarDate,
+                bazi_summary: JSON.stringify(ob),
+                place: '',
+                remark
+            };
+            if (id) {
+                updateBaziRecord({...payload, id}).then(() => {
+                    setNoticeMsg('保存成功');
+                    setNotice(true);
+                    setTimeout(() => setNotice(false), 800);
+                });
+                setIsSaved(true);
+            } else {
+                setBaziRecord(payload).then((res: any) => {
+                    const newId = res?.id ?? res?.data?.id;
+                    if (newId != null) setCreatedRecordId(newId);
+                    setNoticeMsg('保存成功');
+                    setNotice(true);
+                    setTimeout(() => setNotice(false), 800);
+                });
+                setIsSaved(true);
+            }
         } else if (!userid) {
             Alert.alert('没有用户信息');
         }
@@ -224,6 +275,12 @@ function BaziPanScreen({route}) {
                     <Text style={styles.headerTitle}>星垣水镜 八字盘</Text>
                 </View>
                 <View style={styles.navSideRight}>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('back', { screen: '星垣水镜', params: { editParams: { solarDate, gender, nickname, recordId: id } } })}
+                        style={{ marginRight: 12 }}
+                    >
+                        <Icon name="create-outline" size={22} color="#1a1612" />
+                    </TouchableOpacity>
                     {isSaved ? (
                         <TouchableOpacity onPress={toggleSwitch}>
                             <Icon name="bookmark" size={22} color="#8b4513" />
@@ -249,7 +306,7 @@ function BaziPanScreen({route}) {
             </View>
             {notice && (
                 <View style={styles.notice}>
-                    <Text style={styles.noticeText}>保 存 成 功!</Text>
+                    <Text style={styles.noticeText}>{noticeMsg}</Text>
                 </View>
             )}
             <ScrollView style={{flex: 1}} contentContainerStyle={{paddingBottom: 24}}>
@@ -280,7 +337,7 @@ function BaziPanScreen({route}) {
                             <Text style={[styles.bigFont, styles['color' + GanZhiMap[ob?.bz_jn?.slice(1, 2)]]]}>{BZ_result.ob?.bz_jn?.slice(1, 2)}</Text>
                             {BZ_result?.canggan?.year?.wuxing.map((e, i) => {
                                 return (
-                                    <View style={[styles.inline, styles.canggan]}>
+                                    <View key={`year-${i}`} style={[styles.inline, styles.canggan]}>
                                         <Text style={[styles.miniFont, styles['color' + GanZhiMap[e]]]}>{e + ' '}</Text>
                                         <Text style={styles.miniFont}>{BZ_result?.canggan?.year?.shishen[i]}</Text>
                                     </View>
@@ -294,7 +351,7 @@ function BaziPanScreen({route}) {
                             <Text style={[styles.bigFont, styles['color' + GanZhiMap[ob?.bz_jy?.slice(1, 2)]]]}>{ob?.bz_jy?.slice(1, 2)}</Text>
                             {BZ_result?.canggan?.month?.wuxing?.map((e, i) => {
                                 return (
-                                    <View style={[styles.inline, styles.canggan]}>
+                                    <View key={`month-${i}`} style={[styles.inline, styles.canggan]}>
                                         <Text style={[styles.miniFont, styles['color' + GanZhiMap[e]]]}>{e + ' '}</Text>
                                         <Text style={styles.miniFont}>{BZ_result?.canggan?.month?.shishen[i]}</Text>
                                     </View>
@@ -309,7 +366,7 @@ function BaziPanScreen({route}) {
                             {BZ_result?.canggan &&
                                 BZ_result?.canggan.day.wuxing.map((e, i) => {
                                     return (
-                                        <View style={[styles.inline, styles.canggan]}>
+                                        <View key={`day-${i}`} style={[styles.inline, styles.canggan]}>
                                             <Text style={[styles.miniFont, styles['color' + GanZhiMap[e]]]}>{e + ' '}</Text>
                                             <Text style={styles.miniFont}>{BZ_result?.canggan?.day.shishen[i]}</Text>
                                         </View>
@@ -324,7 +381,7 @@ function BaziPanScreen({route}) {
                             {BZ_result?.canggan &&
                                 BZ_result?.canggan.time.wuxing.map((e, i) => {
                                     return (
-                                        <View style={[styles.inline, styles.canggan]}>
+                                        <View key={`time-${i}`} style={[styles.inline, styles.canggan]}>
                                             <Text style={[styles.miniFont, styles['color' + GanZhiMap[e]]]}>{e + ' '}</Text>
                                             <Text style={styles.miniFont}>{BZ_result?.canggan?.time.shishen[i]}</Text>
                                         </View>
@@ -350,64 +407,64 @@ function BaziPanScreen({route}) {
                     <View style={styles.container}>
                         <Text style={[styles.column, styles.boldFont]}>{'神煞：'}</Text>
                         <View style={styles.column}>
-                            {BZ_result?.shensha?.year?.jishen?.map(e => {
+                            {BZ_result?.shensha?.year?.jishen?.map((e, i) => {
                                 return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'nian'})}>
+                                    <TouchableOpacity key={`yj-${i}`} onPress={() => toggleJishen({...e, position: 'nian'})}>
                                         <Text style={styles.shenshaText}>{e.shenName}</Text>
                                     </TouchableOpacity>
                                 );
                             })}
-                            {BZ_result?.shensha?.year?.xiongsha?.map(e => {
+                            {BZ_result?.shensha?.year?.xiongsha?.map((e, i) => {
                                 return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'nian'})}>
-                                        <Text style={styles.shenshaText}>{e.shenName}</Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                        </View>
-                        <View style={styles.column}>
-                            {BZ_result?.shensha?.month?.jishen?.map(e => {
-                                return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'yue'})}>
-                                        <Text style={styles.shenshaText}>{e.shenName}</Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
-                            {BZ_result?.shensha?.month?.xiongsha?.map(e => {
-                                return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'nian'})}>
+                                    <TouchableOpacity key={`yx-${i}`} onPress={() => toggleJishen({...e, position: 'nian'})}>
                                         <Text style={styles.shenshaText}>{e.shenName}</Text>
                                     </TouchableOpacity>
                                 );
                             })}
                         </View>
                         <View style={styles.column}>
-                            {BZ_result?.shensha?.day?.jishen?.map(e => {
+                            {BZ_result?.shensha?.month?.jishen?.map((e, i) => {
                                 return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'ri'})}>
+                                    <TouchableOpacity key={`mj-${i}`} onPress={() => toggleJishen({...e, position: 'yue'})}>
                                         <Text style={styles.shenshaText}>{e.shenName}</Text>
                                     </TouchableOpacity>
                                 );
                             })}
-                            {BZ_result?.shensha?.day?.xiongsha?.map(e => {
+                            {BZ_result?.shensha?.month?.xiongsha?.map((e, i) => {
                                 return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'nian'})}>
+                                    <TouchableOpacity key={`mx-${i}`} onPress={() => toggleJishen({...e, position: 'nian'})}>
                                         <Text style={styles.shenshaText}>{e.shenName}</Text>
                                     </TouchableOpacity>
                                 );
                             })}
                         </View>
                         <View style={styles.column}>
-                            {BZ_result?.shensha?.time?.jishen?.map(e => {
+                            {BZ_result?.shensha?.day?.jishen?.map((e, i) => {
                                 return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'shi'})}>
+                                    <TouchableOpacity key={`dj-${i}`} onPress={() => toggleJishen({...e, position: 'ri'})}>
                                         <Text style={styles.shenshaText}>{e.shenName}</Text>
                                     </TouchableOpacity>
                                 );
                             })}
-                            {BZ_result?.shensha?.time?.xiongsha?.map(e => {
+                            {BZ_result?.shensha?.day?.xiongsha?.map((e, i) => {
                                 return (
-                                    <TouchableOpacity onPress={() => toggleJishen({...e, position: 'nian'})}>
+                                    <TouchableOpacity key={`dx-${i}`} onPress={() => toggleJishen({...e, position: 'nian'})}>
+                                        <Text style={styles.shenshaText}>{e.shenName}</Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                        <View style={styles.column}>
+                            {BZ_result?.shensha?.time?.jishen?.map((e, i) => {
+                                return (
+                                    <TouchableOpacity key={`tj-${i}`} onPress={() => toggleJishen({...e, position: 'shi'})}>
+                                        <Text style={styles.shenshaText}>{e.shenName}</Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                            {BZ_result?.shensha?.time?.xiongsha?.map((e, i) => {
+                                return (
+                                    <TouchableOpacity key={`tx-${i}`} onPress={() => toggleJishen({...e, position: 'nian'})}>
                                         <Text style={styles.shenshaText}>{e.shenName}</Text>
                                     </TouchableOpacity>
                                 );
@@ -429,8 +486,8 @@ function BaziPanScreen({route}) {
                                     outputRange: ['rgba(247, 232, 170, 0)', 'rgba(247, 232, 170, 0.6)']
                                 });
                                 return (
-                                    <View style={styles.column}>
-                                        <TouchableWithoutFeedback key={index} onPressIn={() => handlePressIn(index)} onPressOut={() => handlePressOut(index)}>
+                                    <View key={`dayun-${index}`} style={styles.column}>
+                                        <TouchableWithoutFeedback onPressIn={() => handlePressIn(index)} onPressOut={() => handlePressOut(index)}>
                                             <Animated.View style={[styles.touchable, {backgroundColor}]}>
                                                 <View>
                                                     {e.ganzhi ? (
@@ -484,9 +541,9 @@ function BaziPanScreen({route}) {
                             <View style={styles.modalTitleWrapper}>
                                 <Text style={styles.gejuModalTitle}>格局</Text>
                             </View>
-                            {(geju[ob?.bz_jr?.slice(0, 1) + ob?.bz_jy?.slice(1, 2)]?.ge || '').split(' ').map(item => {
+                            {(geju[ob?.bz_jr?.slice(0, 1) + ob?.bz_jy?.slice(1, 2)]?.ge || '').split(' ').map((item, idx) => {
                                 return (
-                                    <View style={styles.gejuWrapper}>
+                                    <View key={`geju-${idx}`} style={styles.gejuWrapper}>
                                         <Text style={styles.gejuText}>本命：{item}</Text>
                                     </View>
                                 );
@@ -552,8 +609,8 @@ function BaziPanScreen({route}) {
                                     <Text style={styles.gejuModalTitle}>用神分析</Text>
                                 </View>
                                 <View style={styles.gejuWrapper}>
-                                    {yongshen[ob?.bz_jr?.slice(0, 1) + ob?.bz_jy?.slice(1, 2)]?.map(item => {
-                                        return <Text style={styles.yongshenText}>{'    ' + item}</Text>;
+                                    {yongshen[ob?.bz_jr?.slice(0, 1) + ob?.bz_jy?.slice(1, 2)]?.map((item, idx) => {
+                                        return <Text key={`yongshen-${idx}`} style={styles.yongshenText}>{'    ' + item}</Text>;
                                     })}
                                 </View>
                             </ScrollView>

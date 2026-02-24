@@ -66,7 +66,15 @@ export const setUserData = params => {
     return axios.post(`${userBase}/set_login_data`, params, localConfig).then(res => res?.data ?? res);
 };
 export const setBaziRecord = params => {
-    return axios.post(`${userBase}/set_bazi_record`, params, localConfig).then(res => console.log(res));
+    return axios.post(`${userBase}/set_bazi_record`, params, localConfig).then(res => res?.data ?? res);
+};
+/** 更新一条八字记录（编辑）：需传 id、userid，其余为要更新的字段 */
+export const updateBaziRecord = params => {
+    return axios.put(`${userBase}/update_bazi_record`, params, localConfig).then(res => res?.data ?? res);
+};
+/** 删除一条八字记录（取消收藏）：需传 id、userid */
+export const deleteBaziRecord = params => {
+    return axios.delete(`${userBase}/delete_bazi_record`, { ...localConfig, data: params }).then(res => res?.data ?? res);
 };
 export const getBaziRecord = params => {
     return axios.get(`${userBase}/fetch_bazi_record`, { params, ...localConfig }).then(res => res.data);

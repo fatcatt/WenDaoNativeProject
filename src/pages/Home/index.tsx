@@ -52,7 +52,7 @@ const fantuiReducer = (ftBaziInfo, action) => {
 };
 
 // @ts-ignore ts-migrate(2700) FIXME: Rest types may only be created from object types.
-export default function HomeScreen({navigation}) {
+export default function HomeScreen({navigation, route}) {
     const [zhouSelected, setZhouSelected] = useState('亚洲');
     // 八字相关
     const [Cp11_J, setCp11_J] = useState('120');
@@ -89,6 +89,42 @@ export default function HomeScreen({navigation}) {
     });
     const [ftRes, setFtRes] = useState([]);
     const [contact, setContact] = useState('');
+    // 编辑模式：从八字盘「编辑」进入时带 recordId，开始排盘后传给八字盘用于更新而非新建
+    const [editingRecordId, setEditingRecordId] = useState<string | number | null>(null);
+
+    // 从八字盘点击「编辑」跳回首页时，用传入的 editParams 预填表单，并标记为编辑该记录
+    useEffect(() => {
+        const editParams = route?.params?.editParams;
+        if (!editParams || !editParams.solarDate) {
+            setEditingRecordId(null);
+            return;
+        }
+        if (editParams.recordId != null && editParams.recordId !== '') {
+            setEditingRecordId(editParams.recordId);
+        } else {
+            setEditingRecordId(null);
+        }
+        const parts = editParams.solarDate.trim().split(/\s+/);
+        const dateStr = parts[0] || '';
+        const timeStr = parts[1] || '00:00';
+        const [y, m, d] = dateStr.split('-').map(Number);
+        if (!y || !m || !d) return;
+        const dateNormalized = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const timeNormalized = timeStr.length <= 5 ? timeStr : timeStr.slice(0, 5);
+        const [hh, mm] = timeNormalized.split(':').map(Number);
+        dispatch({type: 'UPDATE_DATE', payload: dateNormalized});
+        dispatch({type: 'UPDATE_TIME', payload: timeNormalized});
+        dispatch({type: 'UPDATE_NAME', payload: editParams.nickname || ''});
+        setSolarDate(dateNormalized);
+        try {
+            const lunar = calendar.solar2lunar(String(y), String(m), String(d));
+            setLunarDate(lunar?.lunarDate || lunar || '');
+        } catch (_) {}
+        setCurrentDate(new Date(y, m - 1, d));
+        setCurrentTime(new Date(0, 0, 0, hh || 0, mm || 0));
+        setGender(editParams.gender === 'female' ? 'female' : 'male');
+        setDateType('gregorian');
+    }, [route?.params?.editParams]);
 
     const handleCalaFantui = () => {
         var l = Solar.fromBaZi(ftBaziInfo.nianGan + ftBaziInfo.nianZhi, ftBaziInfo.yueGan + ftBaziInfo.yueZhi, ftBaziInfo.riGan + ftBaziInfo.riZhi, ftBaziInfo.shiGan + ftBaziInfo.shiZhi);
@@ -280,7 +316,18 @@ export default function HomeScreen({navigation}) {
         setBazi(ob);
         const res = '<font color=red>  <b>[日标]：</b></font>' + '公历 ' + Cml_y + '-' + Cml_m + '-' + Cml_d + ' 儒略日数 ' + int2(jd + 0.5) + ' 距2000年首' + int2(jd + 0.5 - J2000) + '日<br>' + '<font color=red  ><b>[八字]：</b></font>' + ob.bz_jn + '年 ' + ob.bz_jy + '月 ' + ob.bz_jr + '日 ' + ob.bz_js + '时 真太阳 <font color=red>' + ob.bz_zty + '</font><br>' + '<font color=green><b>[纪时]：</b></font><i>' + ob.bz_JS + '</i><br>' + '<font color=green><b>[时标]：</b></font><i>' + '23　 01　 03　 05　 07　 09　 11　 13　 15　 17　 19　 21　 23';
         setMl_result(res);
-        navigation.navigate('八字盘', {navigationParams: {solarDate: solarDate + '  ' + Cml_his, lunarDate: lunarDate + '  ' + Cml_his, nickname: inputFrom.inputName, place: inputFrom.inputPlace, gender}});
+        const isEditFlow = editingRecordId != null && editingRecordId !== '';
+        navigation.navigate('八字盘', {
+            navigationParams: {
+                solarDate: solarDate + '  ' + Cml_his,
+                lunarDate: lunarDate + '  ' + Cml_his,
+                nickname: inputFrom.inputName,
+                place: inputFrom.inputPlace,
+                gender,
+                id: isEditFlow ? String(editingRecordId) : '',
+                autoSaveAfterEdit: isEditFlow
+            }
+        });
     }
 
     // 此刻
