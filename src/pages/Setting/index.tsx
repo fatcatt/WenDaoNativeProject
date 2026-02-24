@@ -1,4 +1,5 @@
 import {ScrollView, View, Text, Animated, Button, Alert, Dimensions, Image, TouchableOpacity, SafeAreaView} from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import styles from './style.js';
 import React, {Component, useEffect, useState, useRef} from 'react';
 import * as WeChat from 'react-native-wechat-lib';
@@ -170,36 +171,58 @@ export default function RNWeChatDemo({navigation}) {
 
     return (
         <SafeAreaView style={styles.settingWrapper}>
-            <View style={styles.userInfo}>
-                <View style={styles.infoLeft}>
-                    {userInfo?.headimg_url && <Image source={{uri: `${userInfo.headimg_url}`}} style={styles.userAvatar} />}
-                    <Text style={styles.userName}>{userInfo.nickname}</Text>
-                    {!userInfo.headimg_url && <Button title="登录" color="#8b4513" onPress={() => handleLogin()} />}
+            {/* 用户卡片 */}
+            <View style={styles.userCard}>
+                <View style={styles.userCardLeft}>
+                    {userInfo?.headimg_url ? (
+                        <Image source={{uri: userInfo.headimg_url}} style={styles.userAvatar} />
+                    ) : (
+                        <View style={[styles.userAvatar, { backgroundColor: '#e8e4dc' }]} />
+                    )}
+                    <View style={styles.userCardTextWrap}>
+                        {userInfo?.headimg_url ? (
+                            <>
+                                <Text style={styles.userName}>{userInfo.nickname || '微信用户'}</Text>
+                                <Text style={styles.userSubtext}>同步您的排盘记录</Text>
+                            </>
+                        ) : (
+                            <Text style={styles.userName}>未登录</Text>
+                        )}
+                    </View>
                 </View>
-                <TouchableOpacity onPress={handleAlipayPay} style={styles.alipayButton}>
-                    <Text style={styles.alipayButtonText}>支付宝支付</Text>
-                </TouchableOpacity>
-                {/* <SvgUri style={styles.setLogo} uri="https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/debian.svg" /> */}
+                {!userInfo?.headimg_url && (
+                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin} activeOpacity={0.8}>
+                        <Text style={styles.loginButtonText}>微信登录</Text>
+                    </TouchableOpacity>
+                )}
             </View>
-            <View style={styles.container}>
+
+            {/* 功能 */}
+            <View style={{ marginTop: 20, paddingHorizontal: 24 }}>
+                <Text style={styles.sectionTitle}>功能</Text>
+                <View style={styles.funcCard}>
+                    <TouchableOpacity style={styles.funcRow} onPress={handleAlipayPay} activeOpacity={0.7}>
+                        <View style={styles.funcRowLeft}>
+                            <View style={styles.funcRowIcon}>
+                                <Icon name="wallet-outline" size={20} color="#8b4513" />
+                            </View>
+                            <Text style={styles.funcRowText}>支付宝支付</Text>
+                        </View>
+                        <Icon name="chevron-forward" size={20} color="#4a4238" style={styles.funcRowArrow} />
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {/* 我的记录 */}
+            <View style={styles.recordSection}>
+                <Text style={styles.recordSectionTitle}>我的记录</Text>
                 <View style={styles.tabs}>
                     <TouchableOpacity style={styles.tabsButton} onPress={() => setPageInfo(0)}>
                         <Text style={page === 0 ? styles.buttonTextHl : styles.buttonText}>记录</Text>
                     </TouchableOpacity>
-                    {/* <TouchableOpacity style={styles.tabsButton} onPress={() => setPageInfo(1)}>
-                        <Text style={page === 1 ? styles.buttonTextHl : styles.buttonText}>收藏</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.tabsButton} onPress={() => setPageInfo(2)}>
-                        <Text style={page === 2 ? styles.buttonTextHl : styles.buttonText}>喜欢</Text>
-                    </TouchableOpacity> */}
                     <View style={styles.highlightBarWrapper}>
                         <Animated.View
-                            style={[
-                                styles.highlightBar,
-                                {
-                                    transform: [{translateX}]
-                                }
-                            ]}
+                            style={[styles.highlightBar, { transform: [{ translateX }] }]}
                         />
                     </View>
                 </View>
@@ -207,36 +230,17 @@ export default function RNWeChatDemo({navigation}) {
                     ref={pagerRef}
                     style={styles.pagerView}
                     initialPage={0}
-                    onPageSelected={e => {
-                        setPageInfo(e.nativeEvent.position);
-                    }}
+                    onPageSelected={e => setPageInfo(e.nativeEvent.position)}
                     onPageScroll={handlePageScroll}>
                     <View key="1" style={[styles.page, { flex: 1 }]}>
-                        {!userInfo.headimg_url ? <Text style={styles.emptyHint}>登录后可记录</Text> : <Record passingRecords={records} navigation={navigation}></Record>}
-                    </View>
-                    <ScrollView key="2" style={styles.page}>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Second page</Text>
-                        <Text style={styles.pagetext}>222Se2345cond page</Text>
-                        <Text style={styles.pagetext}>222S345econd page</Text>
-                        <Text style={styles.pagetext}>22223Second page</Text>
-                        <Text style={styles.pagetext}>2224433Second page</Text>
-                    </ScrollView>
-                    <View key="3" style={styles.page}>
-                        <Text>333333</Text>
+                        {!userInfo.headimg_url ? (
+                            <Text style={styles.emptyHint}>登录后可查看排盘记录</Text>
+                        ) : (
+                            <Record passingRecords={records} navigation={navigation} />
+                        )}
                     </View>
                 </PagerView>
             </View>
-            {/* <Button title="登录123" onPress={handleLogin} /> */}
         </SafeAreaView>
     );
 }

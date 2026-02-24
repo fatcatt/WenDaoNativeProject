@@ -1,8 +1,11 @@
 import axios from 'axios';
 
 const base = 'https://gaocanyixue.com/py';
-// 支付宝支付后端（星垣水镜 Py 服务），可与 base 同域或单独部署
-const payBase = 'https://gaocanyixue.com/py';
+// 支付宝支付后端（本地调试）
+const PAY_LOCAL = true; // 打正式包/用线上时改为 false
+// 模拟器用 localhost；真机必须改成你 Mac 的局域网 IP（Mac 与手机同一 WiFi），否则会 Connection refused
+const PAY_LOCAL_HOST = 'http://192.168.18.142:8000'; // 真机调试时改为 http://你的Mac局域网IP:8000（终端 ifconfig 查看）
+const payBase = PAY_LOCAL ? PAY_LOCAL_HOST : 'https://gaocanyixue.com/py';
 
 // 添加请求拦截器
 axios.interceptors.request.use(

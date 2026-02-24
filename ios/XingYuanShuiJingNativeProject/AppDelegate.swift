@@ -33,13 +33,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     return true
   }
 
-  // 支付宝/微信等通过 URL Scheme 返回 App 时由 React Native Linking 处理
+  // URL Scheme（支付宝等）返回 App 时由 React Native Linking 处理
   func application(
     _ app: UIApplication,
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
     return RCTLinkingManager.application(app, open: url, options: options)
+  }
+
+  // Universal Link（微信登录等）返回 App 时必须实现此方法，否则无法回调
+  func application(
+    _ application: UIApplication,
+    continue userActivity: NSUserActivity,
+    restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+  ) -> Bool {
+    return RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
   }
 }
 
