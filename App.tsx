@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {useState, useCallback} from 'react';
 import type {PropsWithChildren} from 'react';
 import {View} from 'react-native';
 import {SafeAreaProvider, useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -65,21 +65,34 @@ const TabNavigator = () => {
     );
 };
 
-/** 底部安全区：仅用一块与导航栏同色的白条垫底，比系统值少 8px（全局生效） */
+/** 取当前栈顶路由名 */
+function getCurrentRouteName(state) {
+    if (!state?.routes?.[state?.index]) return null;
+    return state.routes[state.index].name;
+}
+
+/** 底部安全区：仅在有底部 Tab 的页面显示，进入详情页（如八字盘）不显示 */
 function AppContent() {
     const insets = useSafeAreaInsets();
     const bottomInset = Math.max(0, insets.bottom - 8);
+    const [showBottomSafeArea, setShowBottomSafeArea] = useState(true);
+
+    const onNavStateChange = useCallback((state) => {
+        const name = state ? getCurrentRouteName(state) : null;
+        setShowBottomSafeArea(name === 'back');
+    }, []);
+
     return (
         <View style={styles.body}>
             <View style={{flex: 1}}>
-                <NavigationContainer ref={rootNavigationRef}>
+                <NavigationContainer ref={rootNavigationRef} onStateChange={onNavStateChange}>
                     <Stack.Navigator screenOptions={{headerShown: false}}>
                         <Stack.Screen name="back" component={TabNavigator} options={{headerShown: false}}></Stack.Screen>
                         <Stack.Screen name="八字盘" component={BaziPanScreen} options={{headerShown: false}} />
                     </Stack.Navigator>
                 </NavigationContainer>
             </View>
-            {bottomInset > 0 ? (
+            {showBottomSafeArea && bottomInset > 0 ? (
                 <View
                     style={{
                         height: bottomInset,

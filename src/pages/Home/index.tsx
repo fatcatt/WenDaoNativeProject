@@ -5,7 +5,6 @@ import {SZJ} from '../../utils/eph.js';
 import {SQv, JWv} from '../../utils/JW.js';
 import {addOp, year2Ayear, storageL, timeStr2hour} from '../../utils/tools.js';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {DateTimePickerAndroid} from '@react-native-community/datetimepicker';
 import Modal from 'react-native-modal';
 import styles from './style.js';
 import moment from 'moment';
@@ -136,36 +135,8 @@ export default function HomeScreen({navigation, route}) {
         setFtRes(ftres);
     };
 
-    const onSelectDate = () => {
-        if (Platform.OS === 'android') {
-            launchAndroidDate();
-        } else {
-            setDateSelectVis(true);
-        }
-    };
-    const launchAndroidDate = () => {
-        DateTimePickerAndroid.open({
-            value: currentDate,
-            onChange: onDateChange,
-            display: 'spinner',
-            mode: 'date'
-        });
-    };
-    const launchAndroidTime = () => {
-        DateTimePickerAndroid.open({
-            value: currentDate,
-            onChange: onTimeChange,
-            display: 'spinner',
-            mode: 'time'
-        });
-    };
-    const onSelectTime = () => {
-        if (Platform.OS === 'android') {
-            launchAndroidTime();
-        } else {
-            setTimeSelectVis(true);
-        }
-    };
+    const onSelectDate = () => setDateSelectVis(true);
+    const onSelectTime = () => setTimeSelectVis(true);
     const handleComfirmDate = (e, date) => {
         // form表单中的date和计算八字的date分别使用；
         if (dateType == 'lunar') {
@@ -191,23 +162,11 @@ export default function HomeScreen({navigation, route}) {
         dispatch({type: 'UPDATE_TIME', payload: time ? time : moment(currentTime).format('HH:mm')});
         setTimeSelectVis(false);
     };
-    const onDateChange = (e, date) => {
-        setCurrentDate(date);
-        console.log(date);
-        if (Platform.OS === 'android') {
-            // 选择了时间，更新状态并关闭弹窗
-            handleComfirmDate(e, date);
-            setDateSelectVis(false);
-        }
+    const onDateChange = (_e, date) => {
+        if (date != null) setCurrentDate(date);
     };
-    const onTimeChange = (e, time) => {
-        setCurrentTime(time);
-        if (Platform.OS === 'android') {
-            setTimeSelectVis(false);
-            setTimeout(() => {
-                dispatch({type: 'UPDATE_TIME', payload: moment(time).format('HH:mm')});
-            }, 0);
-        }
+    const onTimeChange = (_e, time) => {
+        if (time != null) setCurrentTime(time);
     };
     const selectMale = () => {
         setGender('male');
@@ -416,46 +375,62 @@ export default function HomeScreen({navigation, route}) {
                         点击关注 <Text style={styles.contactLink}>星垣水镜</Text>
                     </Text>
                 </TouchableOpacity>
-                {/* 日期选择器 */}
-                {Platform.OS === 'ios' ? (
-                    <Modal
-                        isVisible={dateSelectVis}
-                        style={styles.modal}
-                        onBackdropPress={() => {
-                            setDateSelectVis(false);
-                            setFtRes([]);
-                        }}>
-                        <View style={styles.modalBox}>
-                            <DateTimePicker value={currentDate} onChange={onDateChange} display="spinner" mode="date" />
-                            {Platform.OS === 'ios' && <Button title="确定" onPress={handleComfirmDate} />}
+                {/* 日期选择器：与整体风格一致的弹窗，中文、年-月-日、主色确定按钮 */}
+                <Modal
+                    isVisible={dateSelectVis}
+                    style={styles.modal}
+                    onBackdropPress={() => {
+                        setDateSelectVis(false);
+                        setFtRes([]);
+                    }}>
+                    <View style={styles.modalPickerBox}>
+                        <View style={styles.modalPickerWrapper}>
+                            <DateTimePicker
+                                value={currentDate}
+                                onChange={onDateChange}
+                                display="spinner"
+                                mode="date"
+                                locale="zh_CN"
+                            />
                         </View>
-                    </Modal>
-                ) : (
-                    dateSelectVis && <View style={styles.modalBox}>{/* <DateTimePicker value={currentDate} onChange={onDateChange} display="spinner" mode="date" positiveButton={{label: '确定'}} negativeButton={{label: '取消', textColor: 'grey'}} /> */}</View>
-                )}
+                        <TouchableOpacity style={styles.modalConfirmBtn} onPress={() => handleComfirmDate(null, currentDate)} activeOpacity={0.8}>
+                            <Text style={styles.modalConfirmBtnText}>确定</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
                 {/* 时间选择器 */}
-                {Platform.OS === 'ios' ? (
-                    <Modal isVisible={timeSelectVis} style={styles.modal} onBackdropPress={() => setTimeSelectVis(false)}>
-                        <View style={styles.modalBox}>
-                            <DateTimePicker value={currentTime} onChange={onTimeChange} display="spinner" mode="time" />
-                            <Button title="确定" onPress={() => handleComfirmTime()} />
+                <Modal isVisible={timeSelectVis} style={styles.modal} onBackdropPress={() => setTimeSelectVis(false)}>
+                    <View style={styles.modalPickerBox}>
+                        <View style={styles.modalPickerWrapper}>
+                            <DateTimePicker
+                                value={currentTime}
+                                onChange={onTimeChange}
+                                display="spinner"
+                                mode="time"
+                                locale="zh_CN"
+                            />
                         </View>
-                    </Modal>
-                ) : (
-                    timeSelectVis && <View style={styles.modalBox}>{/* {<DateTimePicker value={currentTime} onChange={onTimeChange} display="spinner" mode="time" />} */}</View>
-                )}
+                        <TouchableOpacity style={styles.modalConfirmBtn} onPress={() => handleComfirmTime()} activeOpacity={0.8}>
+                            <Text style={styles.modalConfirmBtnText}>确定</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
                 <Modal isVisible={fantuiModalVis} style={styles.modal} onBackdropPress={() => setFantuiModalVis(false)}>
                     <View style={styles.modalBox}>
+                        <ScrollView
+                            style={styles.modalFantuiScroll}
+                            contentContainerStyle={styles.modalFantuiScrollContent}
+                            showsVerticalScrollIndicator={true}
+                        >
                         <View style={[styles.modalFtRes, styles.ml16]}>
                             <Text style={{fontWeight: 500, marginTop: 8}}>请选择：</Text>
-                            {ftRes.map(e => {
-                                return (
-                                    <TouchableOpacity onPress={() => linkToBazi(e)} style={styles.ftResItem}>
-                                        <Text style={{fontWeight: 500}}>{e}</Text>
-                                    </TouchableOpacity>
-                                );
-                            })}
+                            {ftRes.map((e, index) => (
+                                <TouchableOpacity key={`ftres-${index}`} onPress={() => linkToBazi(e)} style={styles.ftResItem}>
+                                    <Text style={{fontWeight: 500}}>{e}</Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
+                        <Text style={[styles.middleFont, styles.mt16, styles.ml16]}>选择八字四柱：</Text>
                         <View style={styles.flexContainer}>
                             <View style={styles.containerColumn}>
                                 <View>
@@ -464,21 +439,35 @@ export default function HomeScreen({navigation, route}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.nianGan}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_NIANGAN', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.nianGan}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_NIANGAN', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.nianGan}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.nianGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.nianZhi}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_NIANZHI', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.nianZhi}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_NIANZHI', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.nianZhi}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                             </View>
@@ -489,21 +478,35 @@ export default function HomeScreen({navigation, route}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.yueGan}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_YUEGAN', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.yueGan}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_YUEGAN', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.yueGan}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.yueGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.yueZhi}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_YUEZHI', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.yueZhi}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_YUEZHI', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.yueZhi}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                             </View>
@@ -514,21 +517,35 @@ export default function HomeScreen({navigation, route}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.riGan}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_RIGAN', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.riGan}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_RIGAN', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.riGan}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.riGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.riZhi}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_RIZHI', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.riZhi}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_RIZHI', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.riZhi}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                             </View>
@@ -539,26 +556,41 @@ export default function HomeScreen({navigation, route}) {
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={Gan}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.shiGan}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_SHIGAN', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.shiGan}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_SHIGAN', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.shiGan}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                                 <View style={styles.mb16}>
                                     <SelectDropdown
                                         data={YangGan.indexOf(ftBaziInfo.shiGan) === -1 ? YinZhi : YangZhi}
-                                        buttonStyle={{width: 48, height: 48, borderRadius: 24}}
-                                        defaultButtonText={ftBaziInfo.shiZhi}
-                                        onSelect={(selectedItem, index) => {
-                                            setFtBaziInfo({type: 'UPDATE_SHIZHI', payload: selectedItem});
-                                        }}
+                                        dropdownStyle={styles.gzDropdownList}
+                                        disableAutoScroll
+                                        defaultValue={ftBaziInfo.shiZhi}
+                                        onSelect={(selectedItem) => setFtBaziInfo({type: 'UPDATE_SHIZHI', payload: selectedItem})}
+                                        renderButton={(selectedItem) => (
+                                            <View style={styles.gzSelectBox}>
+                                                <Text style={styles.bigFont}>{selectedItem != null ? selectedItem : ftBaziInfo.shiZhi}</Text>
+                                            </View>
+                                        )}
+                                        renderItem={(item) => (
+                                            <View style={styles.gzDropdownItem}><Text style={styles.middleFont}>{item}</Text></View>
+                                        )}
                                     />
                                 </View>
                             </View>
                         </View>
                         <Button title="确定" onPress={handleCalaFantui} />
+                        </ScrollView>
                     </View>
                 </Modal>
             </View>

@@ -267,7 +267,7 @@ function BaziPanScreen({route}) {
             {/* 导航栏：与上方分割，白底 */}
             <View style={styles.navBar}>
                 <View style={styles.navSide}>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} style={{ padding: 4 }}>
                         <Icon name="chevron-back-outline" size={24} color="#1a1612" />
                     </TouchableOpacity>
                 </View>

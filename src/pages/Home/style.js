@@ -166,7 +166,38 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === 'ios' ? 28 : 20,
     paddingHorizontal: 16,
   },
-  // 反推弹窗
+  // 日期/时间选择器弹窗：与整体暖色一致，非纯白，内容居中
+  modalPickerBox: {
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  modalPickerWrapper: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalConfirmBtn: {
+    marginTop: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalConfirmBtnText: {
+    color: colors.textSecondary,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  // 反推弹窗：可滚动，避免年柱/月柱/日柱/时柱被挤出视口
+  modalFantuiScroll: {
+    maxHeight: 420,
+  },
+  modalFantuiScrollContent: {
+    paddingBottom: 24,
+  },
   modalFtRes: {
     maxHeight: 200,
   },
@@ -210,13 +241,23 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   gzSelectBox: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     backgroundColor: colors.bg,
-    borderRadius: 24,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  /** 下拉大列表整体容器的圆角（不是每一项的圆角） */
+  gzDropdownList: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  gzDropdownItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: colors.card,
   },
   modalnei: {
     minHeight: 200,
