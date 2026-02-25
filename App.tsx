@@ -7,9 +7,8 @@
 
 import React from 'react';
 import type {PropsWithChildren} from 'react';
-import {SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, useColorScheme, View} from 'react-native';
-
-import {Colors, DebugInstructions, Header, LearnMoreLinks, ReloadInstructions} from 'react-native/Libraries/NewAppScreen';
+import {View} from 'react-native';
+import {SafeAreaProvider, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {rootNavigationRef} from './src/navigationRef';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -43,7 +42,8 @@ const TabNavigator = () => {
                     return (
                         <FontAwesome5
                             name={iconName}
-                            size={22}
+                            size={20}
+                            solid={false}
                             style={{color: focused ? tabColors.active : tabColors.inactive}}
                         />
                     );
@@ -65,16 +65,37 @@ const TabNavigator = () => {
     );
 };
 
-function App() {
+/** 底部安全区：仅用一块与导航栏同色的白条垫底，比系统值少 8px（全局生效） */
+function AppContent() {
+    const insets = useSafeAreaInsets();
+    const bottomInset = Math.max(0, insets.bottom - 8);
     return (
         <View style={styles.body}>
-            <NavigationContainer ref={rootNavigationRef}>
-                <Stack.Navigator screenOptions={{headerShown: false}}>
-                    <Stack.Screen name="back" component={TabNavigator} options={{headerShown: false}}></Stack.Screen>
-                    <Stack.Screen name="八字盘" component={BaziPanScreen} options={{headerShown: false}} />
-                </Stack.Navigator>
-            </NavigationContainer>
+            <View style={{flex: 1}}>
+                <NavigationContainer ref={rootNavigationRef}>
+                    <Stack.Navigator screenOptions={{headerShown: false}}>
+                        <Stack.Screen name="back" component={TabNavigator} options={{headerShown: false}}></Stack.Screen>
+                        <Stack.Screen name="八字盘" component={BaziPanScreen} options={{headerShown: false}} />
+                    </Stack.Navigator>
+                </NavigationContainer>
+            </View>
+            {bottomInset > 0 ? (
+                <View
+                    style={{
+                        height: bottomInset,
+                        backgroundColor: tabColors.barBg,
+                    }}
+                />
+            ) : null}
         </View>
+    );
+}
+
+function App() {
+    return (
+        <SafeAreaProvider>
+            <AppContent />
+        </SafeAreaProvider>
     );
 }
 
