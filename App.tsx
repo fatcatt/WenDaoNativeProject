@@ -16,6 +16,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import HomeScreen from './src/pages/Home/index';
 import RecordListScreen from './src/pages/RecordList/index';
 import SettingsScreen from './src/pages/Setting/index';
+import FengShuiScreen from './src/pages/FengShui/index';
 import BaziPanScreen from './src/pages/BaziPan/index';
 import styles from './globalStyle.js';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -38,6 +39,7 @@ const TabNavigator = () => {
                     const iconName =
                         route.name === '星垣水镜' ? 'yin-yang'
                         : route.name === '记录' ? 'list-alt'
+                        : route.name === '风水' ? 'compass'
                         : 'user-circle';
                     return (
                         <FontAwesome5
@@ -60,6 +62,7 @@ const TabNavigator = () => {
             })}>
             <Tab.Screen name="星垣水镜" component={HomeScreen} options={{headerShown: false}} />
             <Tab.Screen name="记录" component={RecordListScreen} options={{headerShown: false}} />
+            <Tab.Screen name="风水" component={FengShuiScreen} options={{headerShown: false}} />
             <Tab.Screen name="我的" component={SettingsScreen} options={{headerShown: false}} />
         </Tab.Navigator>
     );
