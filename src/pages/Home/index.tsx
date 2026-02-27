@@ -1,4 +1,4 @@
-import {ScrollView, View, Text, TextInput, Button, TouchableWithoutFeedback, TouchableOpacity, Alert, SafeAreaView, Platform} from 'react-native';
+import {ScrollView, View, Text, TextInput, Button, TouchableWithoutFeedback, TouchableOpacity, Alert, SafeAreaView, Platform, Image} from 'react-native';
 import React, {useEffect, useState, useReducer} from 'react';
 import {JD, J2000, radd, int2, rad2str2} from '../../utils/eph0.js';
 import {SZJ} from '../../utils/eph.js';
@@ -13,6 +13,12 @@ import calendar from 'js-calendar-converter';
 import {Lunar, Solar} from 'lunar-javascript';
 import SelectDropdown from 'react-native-select-dropdown';
 import Clipboard from '@react-native-clipboard/clipboard';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import {useUserStore} from '../../store/index';
+import {useFocusEffect} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {getUserData} from '../../api/index';
+
 const reducer = (inputFrom, action) => {
     switch (action.type) {
         case 'UPDATE_NAME':
@@ -52,7 +58,19 @@ const fantuiReducer = (ftBaziInfo, action) => {
 
 // @ts-ignore ts-migrate(2700) FIXME: Rest types may only be created from object types.
 export default function HomeScreen({navigation, route}) {
+    const {userInfo, setUserInfo: setUserInfoStore} = useUserStore();
     const [zhouSelected, setZhouSelected] = useState('亚洲');
+
+    // 进入首页时若已登录但 store 无头像，从接口拉取并写入 store（与「我的」同源）
+    useFocusEffect(
+        React.useCallback(() => {
+            if (userInfo?.headimg_url) return;
+            AsyncStorage.getItem('unionid').then(unionid => {
+                if (!unionid) return;
+                getUserData({unionid}).then(res => setUserInfoStore(res)).catch(() => {});
+            });
+        }, [userInfo?.headimg_url, setUserInfoStore])
+    );
     // 八字相关
     const [Cp11_J, setCp11_J] = useState('120');
     const [Ml_result, setMl_result] = useState('');
@@ -325,7 +343,23 @@ export default function HomeScreen({navigation, route}) {
             {/* <View style={styles.header}>
                 <Text style={styles.headerText}>Custom Header</Text>
             </View> */}
-            {/* <!--命理八字--> */}
+            {/* 顶部栏：头像（来自 store，与「我的」一致） | 八字记录入口 */}
+            <View style={styles.headerBar}>
+                <TouchableOpacity style={styles.headerAvatarWrap} activeOpacity={0.8}>
+                    {userInfo?.headimg_url ? (
+                        <Image source={{uri: userInfo.headimg_url}} style={styles.headerAvatar} resizeMode="cover" />
+                    ) : (
+                        <View style={[styles.headerAvatar, {backgroundColor: '#e8e4dc'}]} />
+                    )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.headerRecordsBtn}
+                    activeOpacity={0.8}
+                    onPress={() => navigation.navigate('记录')}
+                >
+                    <FontAwesome5 name="list-alt" size={18} color="#5c4a3a" />
+                </TouchableOpacity>
+            </View>
             <View style={styles.contentWrapper}>
                 <View style={styles.inputInfo}>
                     <View style={styles.selectButtons}>
@@ -360,10 +394,10 @@ export default function HomeScreen({navigation, route}) {
                         </View>
                     </TouchableWithoutFeedback>
                     <View style={styles.inputContainer}>
-                        <TextInput value={inputFrom.inputPlace} editable={false} placeholder="出生地点" placeholderTextColor="#9c958a" pointerEvents="none" style={styles.formItem} />
+                        <TextInput value={inputFrom.inputName} onChangeText={text => dispatch({type: 'UPDATE_NAME', payload: text})} placeholder="姓名" placeholderTextColor="#9c958a" style={styles.formItem} />
                     </View>
                     <View style={styles.inputContainer}>
-                        <TextInput value={inputFrom.inputName} onChangeText={text => dispatch({type: 'UPDATE_NAME', payload: text})} placeholder="姓名（选填）" placeholderTextColor="#9c958a" style={styles.formItem} />
+                        <TextInput value={inputFrom.inputPlace} editable={false} placeholder="出生地点" placeholderTextColor="#9c958a" pointerEvents="none" style={styles.formItem} />
                     </View>
                     {/* </View> */}
                 </View>

@@ -14,7 +14,7 @@ import {WECHAT_APP_ID, WECHAT_UNIVERSAL_LINK, WECHAT_APP_SECRET} from '../../con
 
 const screenHeight = Dimensions.get('window').height;
 export default function RNWeChatDemo({navigation}) {
-    const {setUserId} = useUserStore();
+    const {setUserId, setUserInfo: setUserInfoStore} = useUserStore();
     const [userInfo, setUserInfo] = useState({
         nickname: '',
         headimg_url: ''
@@ -66,6 +66,7 @@ export default function RNWeChatDemo({navigation}) {
         getUserData({unionid})
             .then(async res => {
                 setUserInfo(res);
+                setUserInfoStore(res);
                 setUserId(res.user_id);
                 await AsyncStorage.setItem('userid', res.user_id.toString() || '');
             })
@@ -158,6 +159,7 @@ export default function RNWeChatDemo({navigation}) {
                     await AsyncStorage.removeItem('unionid');
                     setUserId('');
                     setUserInfo({ nickname: '', headimg_url: '' });
+                    setUserInfoStore({ nickname: '', headimg_url: '' });
                 },
             },
         ]);

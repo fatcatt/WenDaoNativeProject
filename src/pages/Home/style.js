@@ -11,6 +11,9 @@ const colors = {
   textSecondary: '#4a4238', // 加深辅文，仍弱于正文
   male: '#2e5c8a',
   female: '#8b3a62',
+  // 顶部栏（与页面背景一致，避免断层）
+  headerBarBorder: '#d4cfc4',
+  headerBarIcon: '#ffffff',
 };
 
 const styles = StyleSheet.create({
@@ -23,6 +26,49 @@ const styles = StyleSheet.create({
   },
   contentWrapper: {
     flex: 1,
+  },
+  // 顶部栏：与 content 区域在视觉上保持相似左右留白
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.bg,
+    marginHorizontal: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  headerAvatarWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: colors.headerBarBorder,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  headerPlusBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.headerBarBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerRecordsBtn: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   // 表单卡片（左右边距与主按钮一致，不贴边）
   inputInfo: {
