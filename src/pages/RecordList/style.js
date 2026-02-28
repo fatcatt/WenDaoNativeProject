@@ -1,15 +1,5 @@
 import { StyleSheet, Platform } from 'react-native';
-
-const colors = {
-  bg: '#f5f2eb',
-  card: '#ffffff',
-  text: '#1a1612',
-  textSecondary: '#4a4238',
-  border: '#e8e4dc',
-  searchBg: '#f0ede6',
-  tabActive: '#5c4a3a',
-  filterBtn: '#4a4238',
-};
+import { colors } from '../../theme/colors';
 
 const styles = StyleSheet.create({
   container: {
@@ -61,7 +51,7 @@ const styles = StyleSheet.create({
   },
   filterBtnText: {
     fontSize: 14,
-    color: colors.filterBtn,
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   categoryRow: {
@@ -103,12 +93,12 @@ const styles = StyleSheet.create({
   },
   swipeActionDelete: {
     flex: 1,
-    backgroundColor: '#c0392b',
+    backgroundColor: colors.danger,
     justifyContent: 'center',
     alignItems: 'center',
   },
   swipeActionText: {
-    color: '#fff',
+    color: colors.card,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -186,13 +176,13 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1a1612',
+    backgroundColor: colors.text,
     alignItems: 'center',
     justifyContent: 'center',
   },
   zodiacText: {
     fontSize: 16,
-    color: '#c4952c',
+    color: colors.accentGold,
     fontWeight: '700',
   },
   emptyWrap: {

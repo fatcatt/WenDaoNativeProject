@@ -1,18 +1,5 @@
-import {StyleSheet, Platform} from 'react-native';
-
-const colors = {
-  bg: '#f5f2eb',
-  card: '#ffffff',
-  primary: '#8b4513',
-  primaryLight: '#a0522d',
-  border: '#e8e4dc',
-  text: '#1a1612',
-  textSecondary: '#4a4238',
-  btnBorder: '#c4a77d',
-  btnBg: '#e8e4dc',
-  tabActive: '#8b4513',
-  tabInactive: '#4a4238',
-};
+import { StyleSheet, Platform } from 'react-native';
+import { colors } from '../../theme/colors';
 
 const styles = StyleSheet.create({
   wrapper: {
@@ -130,7 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 65,
     paddingBottom: 65,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.card,
   },
   compassHint: {
     marginTop: 12,

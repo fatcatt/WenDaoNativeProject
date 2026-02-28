@@ -1,20 +1,5 @@
 import { StyleSheet, Platform } from 'react-native';
-
-const colors = {
-  bg: '#f5f2eb',
-  card: '#ffffff',
-  primary: '#8b4513',
-  primaryLight: '#a0522d',
-  border: '#e8e4dc',
-  borderFocus: '#c4a77d',
-  text: '#1a1612',         // 加深正文，提升可读
-  textSecondary: '#4a4238', // 加深辅文，仍弱于正文
-  male: '#2e5c8a',
-  female: '#8b3a62',
-  // 顶部栏（与页面背景一致，避免断层）
-  headerBarBorder: '#d4cfc4',
-  headerBarIcon: '#ffffff',
-};
+import { colors } from '../../theme/colors';
 
 const styles = StyleSheet.create({
   homeWrapper: {

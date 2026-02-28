@@ -1,16 +1,5 @@
 import { StyleSheet, Platform } from 'react-native';
-
-// 与首页同色系；正文加深，Tab 用灰棕弱化
-const colors = {
-  bg: '#f5f2eb',
-  primary: '#8b4513',
-  primaryLight: '#a0522d',
-  tabAccent: '#5c4a3a',   // 页面内 Tab 用灰棕，不抢眼
-  text: '#1a1612',
-  textSecondary: '#4a4238',
-  border: '#e8e4dc',
-  card: '#ffffff',
-};
+import { colors } from '../../theme/colors';
 
 const styles = StyleSheet.create({
   settingWrapper: {
@@ -67,7 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   loginButtonText: {
-    color: '#fff',
+    color: colors.card,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -121,7 +110,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f5f2eb',
+    backgroundColor: colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
   },
