@@ -1,13 +1,48 @@
 import { StyleSheet, Platform } from 'react-native';
-import { colors } from '../../theme/colors';
+import { colors } from '../../theme/colorsBazi';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
   },
+  navHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.bg,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  navHeaderBack: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  navHeaderBackText: {
+    fontSize: 15,
+    color: colors.text,
+    marginLeft: 2,
+  },
+  navHeaderTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  navHeaderAdd: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 80,
+    justifyContent: 'flex-end',
+  },
+  navHeaderAddText: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
   header: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.bg,
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,

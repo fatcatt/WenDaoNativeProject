@@ -21,6 +21,7 @@ import { useUserStore } from '../../store/index';
 import { getBaziRecord, deleteBaziRecord } from '../../api/index';
 import { parse } from '../../utils/js/tool';
 import { GanZhiMap } from '../../utils/constants/shensha';
+import { colors } from '../../theme/colorsBazi';
 import styles from './style.js';
 
 const ZODIAC_MAP: Record<string, string> = {
@@ -326,16 +327,38 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
     );
   };
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('首页');
+    }
+  };
+
+  const handleAddArchive = () => {
+    navigation.navigate('八字');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* 顶部导航：返回 | 档案列表 | 添加档案 */}
+      <View style={styles.navHeader}>
+        <TouchableOpacity style={styles.navHeaderBack} onPress={handleBack} activeOpacity={0.7}>
+          <Icon name="chevron-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.navHeaderTitle}>档案列表</Text>
+        <TouchableOpacity style={styles.navHeaderAdd} onPress={handleAddArchive} activeOpacity={0.7}>
+          <Icon name="add" size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
       <View style={styles.header}>
         <View style={styles.searchRow}>
           <View style={styles.searchWrap}>
-            <Icon name="search-outline" size={20} color="#4a4238" style={styles.searchIcon} />
+            <Icon name="search-outline" size={20} color={colors.text} style={styles.searchIcon} />
             <TextInput
               style={styles.searchInput}
               placeholder="请输入搜索的内容"
-              placeholderTextColor="#9a9389"
+              placeholderTextColor={colors.textSecondary}
               value={searchText}
               onChangeText={setSearchText}
             />
@@ -345,7 +368,7 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
                 onPress={() => setSearchText('')}
                 style={styles.searchClearBtn}
               >
-                <Icon name="close-circle" size={20} color="#9a9389" />
+                <Icon name="close-circle" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -355,13 +378,9 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
         </View>
       </View>
 
-      <View style={styles.categoryRow}>
-        <Text style={styles.categoryLabel}>全部</Text>
-      </View>
-
       {loading ? (
         <View style={styles.emptyWrap}>
-          <ActivityIndicator size="large" color="#5c4a3a" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : filteredRecords.length === 0 ? (
         <View style={styles.emptyWrap}>

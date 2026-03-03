@@ -13,7 +13,8 @@ import {NavigationContainer} from '@react-navigation/native';
 import {rootNavigationRef} from './src/navigationRef';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import HomeScreen from './src/pages/Home/index';
+import IndexScreen from './src/pages/Index/index';
+import AddArchiveScreen from './src/pages/addArchive/index';
 import RecordListScreen from './src/pages/RecordList/index';
 import SettingsScreen from './src/pages/Setting/index';
 import FengShuiScreen from './src/pages/FengShui/index';
@@ -37,7 +38,8 @@ const TabNavigator = () => {
             screenOptions={({route}) => ({
                 tabBarIcon: ({focused}) => {
                     const iconName =
-                        route.name === '星垣水镜' ? 'yin-yang'
+                        route.name === '首页' ? 'home'
+                        : route.name === '八字' ? 'yin-yang'
                         : route.name === '记录' ? 'list-alt'
                         : route.name === '风水' ? 'compass'
                         : 'user-circle';
@@ -60,7 +62,8 @@ const TabNavigator = () => {
                     borderTopWidth: 1,
                 },
             })}>
-            <Tab.Screen name="星垣水镜" component={HomeScreen} options={{headerShown: false}} />
+            <Tab.Screen name="首页" component={IndexScreen} options={{headerShown: false}} />
+            <Tab.Screen name="八字" component={AddArchiveScreen} options={{headerShown: false}} />
             <Tab.Screen name="记录" component={RecordListScreen} options={{headerShown: false}} />
             <Tab.Screen name="风水" component={FengShuiScreen} options={{headerShown: false}} />
             <Tab.Screen name="我的" component={SettingsScreen} options={{headerShown: false}} />

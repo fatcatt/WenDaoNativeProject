@@ -1,9 +1,11 @@
 /**
  * 罗盘：底图为罗盘图片（旋转），天心十字与指针固定
  * heading: 0-360，来自设备磁力计；底图旋转 -heading，使当前朝向对准顶部
+ * 配色与 FengShui 页一致，使用 colorsBazi
  */
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import { colors as themeColors } from '../../theme/colorsBazi';
 
 const SIZES = { rose: 280, crosshair: 1 };
 
@@ -11,11 +13,10 @@ const SIZES = { rose: 280, crosshair: 1 };
 const LUOPAN_SOURCE = require('./assets/luopan.png');
 
 const colors = {
-  crosshair: '#c0392b',
-  needle: '#c0392b',
-  needleNorth: '#c9a227', // 十字线尖端北指针：偏黄色
-  needleTail: '#5c4a3a',
-  centerArrow: '#c0392b',
+  crosshair: themeColors.primary,
+  needleNorth: themeColors.accentGold,
+  needleTail: themeColors.textSecondary,
+  centerArrow: themeColors.primary,
 };
 
 export default function CompassRose({ heading = 0, diskScale = 1, size = SIZES.rose }) {
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    backgroundColor: '#ffffff',
+    backgroundColor: themeColors.card,
   },
   diskWrap: {
     position: 'absolute',

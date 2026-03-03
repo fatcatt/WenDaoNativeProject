@@ -1,25 +1,26 @@
 /**
- * 全局颜色配置：修改此处即可让主页面、风水页、记录页、我的页统一换色
+ * 首页（Index）专用：light-wisteria 紫色系
+ * 50:#faf8fc 100:#f3eef9 200:#eae0f4 300:#d9c7eb 400:#c7ade1 500:#a67fcd 600:#8e62bb 700:#784ea2 800:#644485 900:#51376c 950:#351f4c
  */
 export const colors = {
-  bg: '#f5f2eb',
-  card: '#ffffff',
-  primary: '#8b4513',
-  primaryLight: '#a0522d',
-  border: '#e8e4dc',
-  text: '#1a1612',
-  textSecondary: '#4a4238',
-  btnBorder: '#c4a77d',
-  btnBg: '#e8e4dc',
-  tabActive: '#8b4513',
-  tabInactive: '#4a4238',
-  tabAccent: '#5c4a3a', // 记录/我的页 Tab、筛选等
-  borderFocus: '#c4a77d',
-  male: '#2e5c8a',
+  bg: '#ffffff',
+  card: '#faf8fc',
+  primary: '#8e62bb',
+  primaryLight: '#c7ade1',
+  border: '#eae0f4',
+  text: '#351f4c',
+  textSecondary: '#644485',
+  btnBorder: '#d9c7eb',
+  btnBg: '#ffffff',
+  tabActive: '#8e62bb',
+  tabInactive: '#784ea2',
+  tabAccent: '#784ea2',
+  borderFocus: '#a67fcd',
+  male: '#8e62bb',
   female: '#8b3a62',
-  headerBarBorder: '#d4cfc4',
+  headerBarBorder: '#eae0f4',
   headerBarIcon: '#ffffff',
-  searchBg: '#f0ede6', // 记录页搜索框背景
-  danger: '#c0392b', // 删除等警示
-  accentGold: '#c4952c', // 记录页生肖等点缀
+  searchBg: '#ffffff',
+  danger: '#dc2626',
+  accentGold: '#a67fcd',
 };

@@ -1,5 +1,5 @@
 import { StyleSheet, Platform } from 'react-native';
-import { colors } from '../../theme/colors';
+import { colors } from '../../theme/colorsBazi';
 
 const styles = StyleSheet.create({
   wrapper: {

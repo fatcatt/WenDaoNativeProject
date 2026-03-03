@@ -57,7 +57,7 @@ const fantuiReducer = (ftBaziInfo, action) => {
 };
 
 // @ts-ignore ts-migrate(2700) FIXME: Rest types may only be created from object types.
-export default function HomeScreen({navigation, route}) {
+export default function AddArchiveScreen({navigation, route}) {
     const {userInfo, setUserInfo: setUserInfoStore} = useUserStore();
     const [zhouSelected, setZhouSelected] = useState('亚洲');
 
@@ -228,53 +228,6 @@ export default function HomeScreen({navigation, route}) {
     var curJD; //现在日期
     var curTZ = -8; //当前时区
 
-    /****************
-    外地时间选择
-    ****************/
-    function change_dq() {
-        //国家或地区改变
-        // var i,
-        //     v = Sel_dq.current.options[Sel_dq.current.selectedIndex].value;
-        // v = v.split('#');
-        // Sel_dq.current.v = v[0]; //地区时差
-        // Sel_dq.current.rg = v[1]; //日光节约参数
-        // Sel_sqsm.current.innerHTML = v[2]; //时区说明
-    }
-
-    /****************
-    地理经纬度选择的页面控制函数
-    ****************/
-    function change2() {
-        var i,
-            v = new JWdecode(Sel2.options[Sel2.selectedIndex].value);
-        Sel2.vJ = v.J;
-        Sel2.vW = v.W;
-        (Cb_J.value = ((v.J / Math.PI) * 180).toFixed(6)), (Cb_W.value = ((v.W / Math.PI) * 180).toFixed(6));
-        Cf_J.value = Cd_J.value = Cp9_J.value = Cb_J.value;
-        Cf_W.value = Cd_W.value = Cp9_W.value = Cb_W.value;
-        Cp11_J = Cb_J.value;
-        Cal_zdzb.innerHTML = '经 ' + rad2str2(v.J) + ' 纬 ' + rad2str2(v.W);
-        // showMessD(-2);
-        storageL.setItem('Sel1', Sel1.selectedIndex, 1000);
-        storageL.setItem('Sel2', Sel2.selectedIndex, 1000);
-    }
-    function change() {
-        Sel2.length = 0;
-        var i,
-            ob = JWv[Sel1.options[Sel1.selectedIndex].value - 0];
-        for (i = 1; i < ob.length; i++) addOp(Sel2, ob[i].substr(0, 4), ob[i].substr(4, ob[i].length - 4));
-        change2();
-    }
-    var i;
-    // for (i = 0; i < JWv.length; i++) addOp(document.all.Sel1, i, JWv[i][0]);
-
-    var seI1 = storageL.getItem('Sel1');
-    var seI2 = storageL.getItem('Sel2');
-    // Sel1.selectedIndex = seI1;
-    // change();
-    // Sel2.selectedIndex = seI2;
-    // change2();
-
     /**********************
     命理八字计算
     **********************/
@@ -283,7 +236,6 @@ export default function HomeScreen({navigation, route}) {
         var d = lu.getEightChar();
 
         // ---------------------我是分割-----------------------
-        // form表单中的date有时是阴历，有时是阳历；这里使用排盘专用的阳历
         const [Cml_y, Cml_m, Cml_d] = solarDate.split(/[-\s:]/);
         const [Cml_h, Cml_i, Cml_s = '00'] = inputFrom.inputTime.split(/[-\s:]/);
         const Cml_his = Cml_h + ':' + Cml_i + ':' + Cml_s;
@@ -307,26 +259,8 @@ export default function HomeScreen({navigation, route}) {
         });
     }
 
-    // 此刻
     function ML_settime() {
         set_date_screen(1);
-        // ML_calc();
-    }
-
-    /********************
-    升降计算等
-    *********************/
-
-    function RTS1(jd, vJ, vW, tz) {
-        SZJ.calcRTS(jd, 1, vJ, vW, tz); //升降计算,使用北时时间,tz=-8指东8区,jd+tz应在当地正午左右(误差数小时不要紧)
-        var s,
-            ob = SZJ.rts[0];
-        // JD.setFromJD(jd+J2000);
-        s = '日出 <font color=red>' + ob.s + '</font> 日落 ' + ob.j + ' 中天 ' + ob.z + '<br>';
-        s += '月出 ' + ob.Ms + ' 月落 ' + ob.Mj + ' 月中 ' + ob.Mz + '<br>';
-        s += '晨起天亮 ' + ob.c + ' 晚上天黑 ' + ob.h + '<br>';
-        s += '日照时间 ' + ob.sj + ' 白天时间 ' + ob.ch + '<br>';
-        return s;
     }
 
     const handlePaste = async () => {
@@ -334,15 +268,11 @@ export default function HomeScreen({navigation, route}) {
             Clipboard.setString('ZGLQS0401');
             Alert.alert('复制成功，去微信添加');
         } catch (error) {
-            // Alert.alert('Error', 'Failed to paste text.');
         }
     };
 
     return (
         <SafeAreaView style={styles.homeWrapper}>
-            {/* <View style={styles.header}>
-                <Text style={styles.headerText}>Custom Header</Text>
-            </View> */}
             {/* 顶部栏：头像（来自 store，与「我的」一致） | 八字记录入口 */}
             <View style={styles.headerBar}>
                 <TouchableOpacity style={styles.headerAvatarWrap} activeOpacity={0.8}>
@@ -399,7 +329,6 @@ export default function HomeScreen({navigation, route}) {
                     <View style={styles.inputContainer}>
                         <TextInput value={inputFrom.inputPlace} editable={false} placeholder="出生地点" placeholderTextColor="#9c958a" pointerEvents="none" style={styles.formItem} />
                     </View>
-                    {/* </View> */}
                 </View>
                 <TouchableOpacity style={styles.button} onPress={ML_calc}>
                     <Text style={styles.buttonText}>{'开始排盘'}</Text>
@@ -409,7 +338,7 @@ export default function HomeScreen({navigation, route}) {
                         点击关注 <Text style={styles.contactLink}>星垣水镜</Text>
                     </Text>
                 </TouchableOpacity>
-                {/* 日期选择器：与整体风格一致的弹窗，中文、年-月-日、主色确定按钮 */}
+                {/* 日期选择器 */}
                 <Modal
                     isVisible={dateSelectVis}
                     style={styles.modal}

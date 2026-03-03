@@ -133,8 +133,8 @@ const styles = {
     marginRight: 4,
   },
   bigFont: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '500',
     color: colors.text,
   },
   middleFont: {
