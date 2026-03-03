@@ -8,6 +8,7 @@ import {
   Image,
 } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { useUserStore } from '../../store/index';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,14 +18,11 @@ import moment from 'moment';
 import styles from './style';
 
 const FEATURES = [
-  { key: 'ie', label: 'I人E人', icon: 'users', color: '#e67e22' },
-  { key: 'xingzuo', label: '星座', icon: 'star', color: '#3498db' },
-  { key: 'xingpan', label: '星盘', icon: 'compass', color: '#5dade2' },
   { key: 'shengchen', label: '生辰', icon: 'birthday-cake', color: '#e8a838' },
+  { key: 'xingzuo', label: '星座', icon: 'star', color: '#3498db' },
   { key: 'yuanfen', label: '缘分合盘', icon: 'heart', color: '#e91e8c' },
-  { key: 'peiban', label: '陪伴小星', icon: 'sun', color: '#f1c40f' },
-  { key: 'linghun', label: '灵魂伴侣', icon: 'user-friends', color: '#f1948a' },
-  { key: 'zhihui', label: '智慧卡', icon: 'layer-group', color: '#9b59b6' },
+  { key: 'fengshui', label: '风水', icon: 'compass-outline', color: '#f1c40f', iconSet: 'ionicons' as const },
+  { key: 'zhaositong', label: '找四同', icon: 'layer-group', color: '#9b59b6' },
   { key: 'baogao', label: '星盘报告', icon: 'file-alt', color: '#5dade2'},
   { key: 'more', label: '更多', icon: 'ellipsis-h', color: '#95a5a6' },
 ];
@@ -84,6 +82,10 @@ export default function IndexScreen({ navigation }: { navigation: any }) {
   };
 
   const onFeaturePress = async (key: string) => {
+    if (key === 'fengshui') {
+      navigation.navigate('风水');
+      return;
+    }
     if (key === 'xingpan') {
       navigation.navigate('八字');
       return;
@@ -220,7 +222,11 @@ export default function IndexScreen({ navigation }: { navigation: any }) {
                     <Text style={styles.featureTagText}>{f.tag}</Text>
                   </View>
                 ) : null}
-                <FontAwesome5 name={f.icon} size={26} solid color={f.color} />
+                {f.iconSet === 'ionicons' ? (
+                  <Icon name={f.icon} size={26} color={f.color} />
+                ) : (
+                  <FontAwesome5 name={f.icon} size={26} solid color={f.color} />
+                )}
               </View>
               <Text style={styles.featureLabel}>{f.label}</Text>
             </TouchableOpacity>

@@ -13,11 +13,11 @@ const colors = {
   card: '#ffffff',
   cardWarm: '#faf8f5',
   tabAccent: '#5c4a3a',
-  // Tab 栏与首页同色系深色
-  tabBarBg: '#5c4a3a',
-  tabBarBorder: '#4a3d30',
-  tabBarText: '#c4b8a8',
-  tabBarTextActive: '#f5f2eb',
+  // Tab 栏与首页同色系，略浅；文字加深以提升对比度
+  tabBarBg: '#9a8266',
+  tabBarBorder: '#8b7355',
+  tabBarText: '#e8e4dc',
+  tabBarTextActive: '#ffffff',
   tabBarActiveLine: '#c4a77d',
 };
 

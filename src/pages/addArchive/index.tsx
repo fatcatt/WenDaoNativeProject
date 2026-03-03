@@ -40,10 +40,10 @@ const reducer = (inputFrom, action) => {
 
 /** 选择关系弹窗：分类与选项（含「自己」） */
 const RELATIONSHIP_CATEGORIES = [
-    { title: '亲密关系', color: '#c0392b', items: ['自己', '恋人', '伴侣', '暧昧对象'] },
-    { title: '家人', color: '#e67e22', items: ['父母', '孩子', '家人', '亲友'] },
-    { title: '社交', color: '#3498db', items: ['朋友', '同学', '前任', '特殊关系'] },
-    { title: '合作', color: '#9b59b6', items: ['同事', '领导', '老师', '学生', '客户'] },
+    { title: '亲密关系', color: '#c0392b', items: ['自己', '伴侣', 'crush'] },
+    { title: '家人', color: '#e67e22', items: ['家人', '亲友'] },
+    { title: '社交', color: '#3498db', items: ['朋友', '同学', '特殊关系'] },
+    { title: '合作', color: '#9b59b6', items: ['同事', '老师', '学生', '客户'] },
     { title: '其他', color: '#c0392b', items: ['名人', '案例', '其他'] },
 ];
 const fantuiReducer = (ftBaziInfo, action) => {
