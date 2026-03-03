@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 
 // 头部与参考图一致：白底、与上方/盘面分割
 const colors = {
-  bg: '#f5f2eb',
+  bg: '#faf9f7',
   primary: '#8b4513',
   primaryLight: '#a0522d',
   headerBg: '#ffffff',
