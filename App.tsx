@@ -39,8 +39,6 @@ const TabNavigator = () => {
                 tabBarIcon: ({focused}) => {
                     const iconName =
                         route.name === '首页' ? 'home'
-                        : route.name === '八字' ? 'yin-yang'
-                        : route.name === '记录' ? 'list-alt'
                         : route.name === '风水' ? 'compass'
                         : 'user-circle';
                     return (
@@ -63,8 +61,6 @@ const TabNavigator = () => {
                 },
             })}>
             <Tab.Screen name="首页" component={IndexScreen} options={{headerShown: false}} />
-            <Tab.Screen name="八字" component={AddArchiveScreen} options={{headerShown: false}} />
-            <Tab.Screen name="记录" component={RecordListScreen} options={{headerShown: false}} />
             <Tab.Screen name="风水" component={FengShuiScreen} options={{headerShown: false}} />
             <Tab.Screen name="我的" component={SettingsScreen} options={{headerShown: false}} />
         </Tab.Navigator>
@@ -93,7 +89,9 @@ function AppContent() {
             <View style={{flex: 1}}>
                 <NavigationContainer ref={rootNavigationRef} onStateChange={onNavStateChange}>
                     <Stack.Navigator screenOptions={{headerShown: false}}>
-                        <Stack.Screen name="back" component={TabNavigator} options={{headerShown: false}}></Stack.Screen>
+                        <Stack.Screen name="back" component={TabNavigator} options={{headerShown: false}} />
+                        <Stack.Screen name="记录" component={RecordListScreen} options={{headerShown: false}} />
+                        <Stack.Screen name="八字" component={AddArchiveScreen} options={{headerShown: false}} />
                         <Stack.Screen name="八字盘" component={BaziPanScreen} options={{headerShown: false}} />
                     </Stack.Navigator>
                 </NavigationContainer>

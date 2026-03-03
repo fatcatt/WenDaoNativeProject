@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useRef} from 'react';
-import {View, Text, SafeAreaView, ScrollView, TouchableWithoutFeedback, Animated, TouchableOpacity, ActivityIndicator, Modal, TouchableHighlight, Alert, TextInput} from 'react-native';
+import {View, Text, SafeAreaView, ScrollView, TouchableWithoutFeedback, Animated, TouchableOpacity, ActivityIndicator, Modal, TouchableHighlight, Alert, TextInput, Dimensions} from 'react-native';
 import moment from 'moment';
 import {obb} from '../../utils/lunar.js';
 import {JD, J2000, radd, int2} from '../../utils/eph0.js';
@@ -15,6 +15,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {useNavigation} from '@react-navigation/native';
 import {geju} from '../../utils/constants/geju.js';
 import {yongshen} from '../../utils/constants/yongshen.js';
+import {colors as colorsBazi} from '../../theme/colorsBazi.js';
 
 // 地支藏干（本气），用于大运支十神，兼容 lunar-javascript 的 ZHI_HIDE_GAN 键为占位符的情况
 const ZHI_HIDE_GAN_CN: Record<string, string[]> = {
@@ -26,7 +27,7 @@ const ZHI_HIDE_GAN_CN: Record<string, string[]> = {
 function BaziPanScreen({route}) {
     const navigation = useNavigation();
     const curTZ = -8; //当前时区
-    const {solarDate, gender, nickname, id: routeId = '', autoSaveAfterEdit} = route.params.navigationParams || {};
+    const {solarDate, gender, nickname, relationship: relationshipParam = '', id: routeId = '', autoSaveAfterEdit} = route.params.navigationParams || {};
     const id = routeId;
     const [Cp11_J, setCp11_J] = useState('120');
     const [ob, setBazi] = useState({});
@@ -44,7 +45,11 @@ function BaziPanScreen({route}) {
     const [shenShaToast, setshenShaToast] = useState({});
     const [shenShaModalVisible, setShenShaModalVisible] = useState(false);
     const [yongshenModal, setYongshenModal] = useState(false);
-    const [activeTab, setActiveTab] = useState(1); // 0基本信息 1基本排盘 2专业细盘 3断事笔记
+    const [activeTab, setActiveTab] = useState(0); // 0基本排盘 1解读 2断事笔记
+    const screenWidth = Dimensions.get('window').width;
+    const tabScrollRef = useRef<ScrollView>(null);
+    /** 点击 tab 触发的程序滚动期间为 true，避免 onScroll 把 activeTab 改来改去导致抖闪 */
+    const skipScrollSyncRef = useRef(false);
 
     const handlePressIn = index => {
         // 点击时渐渐显示
@@ -189,6 +194,7 @@ function BaziPanScreen({route}) {
                             gender,
                             solar_datetime: solarDate,
                             bazi_summary: JSON.stringify(ob),
+                            relationship: relationshipParam || '',
                             place: '',
                             remark
                         });
@@ -218,6 +224,7 @@ function BaziPanScreen({route}) {
                 gender,
                 solar_datetime: solarDate,
                 bazi_summary: JSON.stringify(ob),
+                relationship: relationshipParam || '',
                 place: '',
                 remark
             };
@@ -259,7 +266,7 @@ function BaziPanScreen({route}) {
         setshenShaToast(e);
         setShenShaModalVisible(true);
     };
-    const TAB_LABELS = ['基本信息', '基本排盘', '专业细盘', '断事笔记'];
+    const TAB_LABELS = ['基本排盘', '解读', '断事笔记'];
 
     return (
         <View style={styles.paipanWrapper}>
@@ -272,22 +279,21 @@ function BaziPanScreen({route}) {
                     </TouchableOpacity>
                 </View>
                 <View style={styles.headerTitleWrap}>
-                    <Text style={styles.headerTitle}>星垣水镜 八字盘</Text>
+                    <Text style={styles.headerTitle}>八字盘</Text>
                 </View>
                 <View style={styles.navSideRight}>
                     <TouchableOpacity
-                        onPress={() => navigation.navigate('back', { screen: '星垣水镜', params: { editParams: { solarDate, gender, nickname, recordId: id } } })}
-                        style={{ marginRight: 12 }}
+                        onPress={() => navigation.navigate('back', { screen: '星垣水镜', params: { editParams: { solarDate, gender, nickname, relationship: relationshipParam, recordId: id } } })}
                     >
-                        <Icon name="create-outline" size={22} color="#1a1612" />
+                        <Icon name="create-outline" size={24} color={colorsBazi.primaryLight} />
                     </TouchableOpacity>
                     {isSaved ? (
                         <TouchableOpacity onPress={toggleSwitch}>
-                            <Icon name="bookmark" size={22} color="#8b4513" />
+                            <Icon name="save" size={24} color={colorsBazi.accentGold} />
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity onPress={toggleSwitch}>
-                            <Icon name="bookmark-outline" size={22} color="#1a1612" />
+                            <Icon name="save-outline" size={24} color={colorsBazi.primaryLight} />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -298,7 +304,11 @@ function BaziPanScreen({route}) {
                     <TouchableOpacity
                         key={label}
                         style={[styles.tabItem, activeTab === index && styles.tabItemActive]}
-                        onPress={() => setActiveTab(index)}
+                        onPress={() => {
+                        setActiveTab(index);
+                        skipScrollSyncRef.current = true;
+                        tabScrollRef.current?.scrollTo({ x: index * screenWidth, animated: true });
+                    }}
                         activeOpacity={0.7}>
                         <Text style={[styles.tabText, activeTab === index && styles.tabTextActive]}>{label}</Text>
                     </TouchableOpacity>
@@ -309,11 +319,27 @@ function BaziPanScreen({route}) {
                     <Text style={styles.noticeText}>{noticeMsg}</Text>
                 </View>
             )}
-            <ScrollView style={{flex: 1}} contentContainerStyle={{paddingBottom: 24}}>
-                <View style={styles.paipanContainer}>
-                    {activeTab === 0 && <View />}
-                    {activeTab === 1 && (
-                        <>
+            <ScrollView
+                ref={tabScrollRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                scrollEventThrottle={16}
+                onScroll={(e) => {
+                    if (skipScrollSyncRef.current) return;
+                    const x = e.nativeEvent.contentOffset.x;
+                    const i = Math.round(x / screenWidth);
+                    setActiveTab((prev) => (prev !== i ? i : prev));
+                }}
+                onMomentumScrollEnd={(e) => {
+                    const i = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+                    setActiveTab(i);
+                    skipScrollSyncRef.current = false;
+                }}
+                style={{flex: 1}}
+            >
+                <ScrollView style={{width: screenWidth}} contentContainerStyle={{paddingBottom: 24}}>
+                    <View style={styles.paipanContainer}>
                     <Text style={styles.miniFont}>{'姓名：' + nickname}</Text>
                     <Text style={styles.miniFont}>{'出生时间（阳历）：' + solarDate}</Text>
                     <Text style={styles.miniFont}>{'出生时间（阴历）：' + lunardata}</Text>
@@ -522,12 +548,66 @@ function BaziPanScreen({route}) {
                                 );
                             })}
                     </ScrollView>
-                        </>
-                    )}
-                    {activeTab === 0 && <View />}
-                    {activeTab === 2 && <View />}
-                    {activeTab === 3 && <View />}
-                </View>
+                    </View>
+                </ScrollView>
+                <ScrollView style={{width: screenWidth}} contentContainerStyle={{paddingBottom: 24}}>
+                    <View style={styles.paipanContainer}>
+                        <View style={styles.interpretTabWrap}>
+                            {/* 卡片1：格局 */}
+                            <View style={styles.interpretCard}>
+                                <View style={styles.interpretCardTitleRow}>
+                                    <Text style={styles.interpretCardTitle}>【格局】</Text>
+                                    <TouchableOpacity activeOpacity={0.7}>
+                                        <Text style={styles.interpretCardAction}>Ai 解读 &gt;</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={styles.interpretCardContent}>
+                                    {(() => {
+                                        const gejuKey = ob?.bz_jr?.slice(0, 1) + ob?.bz_jy?.slice(1, 2);
+                                        const gejuItem = gejuKey ? geju[gejuKey] : null;
+                                        const geLabel = gejuItem?.ge || '—';
+                                        const mingyu = gejuItem?.mingyu || '暂无格局命语。';
+                                        return (
+                                            <>
+                                                <Text style={styles.interpretCardLabel}>格局：{geLabel}</Text>
+                                                <Text style={styles.interpretCardParagraph}>{mingyu}</Text>
+                                            </>
+                                        );
+                                    })()}
+                                </View>
+                            </View>
+                            {/* 卡片2：五行强弱 */}
+                            <View style={styles.interpretCard}>
+                                <View style={styles.interpretCardTitleRow}>
+                                    <Text style={styles.interpretCardTitle}>【五行强弱】</Text>
+                                    <TouchableOpacity activeOpacity={0.7}>
+                                        <Text style={styles.interpretCardAction}>校正 &gt;</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={styles.interpretCardContent}>
+                                    <Text style={styles.interpretCardLabel}>喜用神与五行旺衰将根据当前排盘计算，此处为占位展示。</Text>
+                                    <Text style={[styles.interpretCardParagraph, { marginTop: 8 }]}>【喜用木、水】</Text>
+                                    <View style={styles.interpretTagRow}>
+                                        <View style={styles.interpretTag}>
+                                            <Text style={styles.interpretTagText}>幸运颜色</Text>
+                                        </View>
+                                        <View style={styles.interpretTag}>
+                                            <Text style={styles.interpretTagText}>幸运方位 东北</Text>
+                                        </View>
+                                        <View style={styles.interpretTag}>
+                                            <Text style={styles.interpretTagText}>幸运数字 22、30</Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </ScrollView>
+                <ScrollView style={{width: screenWidth}} contentContainerStyle={{paddingBottom: 24}}>
+                    <View style={styles.paipanContainer}>
+                        <View />
+                    </View>
+                </ScrollView>
             </ScrollView>
                 <Modal
                     animationType="slide"

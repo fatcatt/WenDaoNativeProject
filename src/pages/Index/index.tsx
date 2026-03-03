@@ -11,8 +11,9 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useUserStore } from '../../store/index';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getUserData } from '../../api/index';
+import { getUserData, getBaziRecord } from '../../api/index';
 import { colors } from '../../theme/colors';
+import moment from 'moment';
 import styles from './style';
 
 const FEATURES = [
@@ -52,9 +53,75 @@ export default function IndexScreen({ navigation }: { navigation: any }) {
     }, [userInfo?.headimg_url, setUserInfoStore])
   );
 
-  const onFeaturePress = (key: string) => {
-    if (key === 'xingpan' || key === 'shengchen') {
+  /** 后端 solar_datetime 转为 BaziPan 需要的 "YYYY-M-D H:mm" */
+  const toBaziPanSolarDate = (solar_datetime: string | null | undefined): string => {
+    if (!solar_datetime) return moment().format('YYYY-M-D H:mm');
+    const s = String(solar_datetime).trim();
+    const formats = [
+      'YYYY-MM-DD HH:mm:ss',
+      'YYYY-MM-DDTHH:mm:ss.SSSZ',
+      'YYYY-MM-DDTHH:mm:ss',
+      'YYYY-M-D  H:mm:ss',
+      'YYYY-M-D H:mm:ss',
+      'YYYY-M-D  H:m:s',
+      'YYYY-M-D H:mm',
+      'YYYY-MM-DD HH:mm',
+    ];
+    for (const fmt of formats) {
+      const m = moment(s, fmt, true);
+      if (m.isValid()) return m.format('YYYY-M-D H:mm');
+    }
+    const m = moment(s);
+    return m.isValid() ? m.format('YYYY-M-D H:mm') : s || moment().format('YYYY-M-D H:mm');
+  };
+
+  const toBaziPanGender = (gender: string | null | undefined): string => {
+    if (!gender) return 'male';
+    const g = String(gender).trim();
+    if (g === '男' || g === 'male') return 'male';
+    if (g === '女' || g === 'female') return 'female';
+    return 'male';
+  };
+
+  const onFeaturePress = async (key: string) => {
+    if (key === 'xingpan') {
       navigation.navigate('八字');
+      return;
+    }
+    if (key === 'shengchen') {
+      const userid = await AsyncStorage.getItem('userid');
+      if (!userid) {
+        navigation.navigate('八字', { initialRelationship: '自己' });
+        return;
+      }
+      try {
+        const list = await getBaziRecord({ userid });
+        const records = Array.isArray(list) ? list : [];
+        // 只认「关系」字段明确为「自己」的记录，避免老数据/空字符串被误用；多条时取最近一条
+        const selfRecords = records.filter(
+          (r: any) => typeof r.relationship === 'string' && r.relationship.trim() === '自己'
+        );
+        const selfRecord = selfRecords.length > 0
+          ? selfRecords.sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0))[0]
+          : null;
+        if (selfRecord) {
+          console.log(selfRecord.solar_datetime)
+          navigation.navigate('八字盘', {
+            navigationParams: {
+              solarDate: toBaziPanSolarDate(selfRecord.solar_datetime),
+              gender: toBaziPanGender(selfRecord.gender),
+              nickname: selfRecord.nickname ?? '',
+              relationship: '自己',
+              id: selfRecord.id ?? '',
+            },
+          });
+        } else {
+          navigation.navigate('八字', { initialRelationship: '自己' });
+        }
+      } catch {
+        navigation.navigate('八字', { initialRelationship: '自己' });
+      }
+      return;
     }
   };
 
@@ -62,7 +129,7 @@ export default function IndexScreen({ navigation }: { navigation: any }) {
     <SafeAreaView style={styles.wrapper}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* 顶部：签到 | 搜索 | 图标 */}
-        <View style={styles.header}>
+        {/* <View style={styles.header}>
           <TouchableOpacity style={styles.signInBtn} activeOpacity={0.8}>
             <FontAwesome5 name="calendar-check" size={14} color="#5c4a3a" />
           </TouchableOpacity>
@@ -71,7 +138,7 @@ export default function IndexScreen({ navigation }: { navigation: any }) {
             <Text style={styles.searchPlaceholder}>人生K线</Text>
           </View>
           
-        </View>
+        </View> */}
 
         {/* 用户区：与八字页一致，显示当前登录用户头像 */}
         <View style={styles.userBanner}>
@@ -84,7 +151,11 @@ export default function IndexScreen({ navigation }: { navigation: any }) {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.avatarPlus} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.avatarPlus}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('八字')}
+          >
             <FontAwesome5 name="plus" size={14} color={colors.primaryLight} />
           </TouchableOpacity>
           <View style={styles.userRight}>
@@ -94,9 +165,6 @@ export default function IndexScreen({ navigation }: { navigation: any }) {
               onPress={() => navigation.navigate('记录')}
             >
               <FontAwesome5 name="list-alt" size={18} color="#5c4a3a" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
-              <FontAwesome5 name="arrow-up" size={14} color="#4a4238" />
             </TouchableOpacity>
           </View>
         </View>

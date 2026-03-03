@@ -33,29 +33,39 @@ const COLOR_MAP: Record<string, string> = {
   Mu: '#2d7a4a', Huo: '#b54a4a', Tu: '#8b6914', Jin: '#c4952c', Shui: '#1a1612',
 };
 
-function formatSolarDate(solar_datetime: string) {
-  try {
-    return moment.utc(solar_datetime).add(0, 'hours').format('阳历YYYY年MM月DD日');
-  } catch {
-    return solar_datetime || '';
+const SOLAR_DATETIME_FORMATS = [
+  'YYYY-MM-DD HH:mm:ss',
+  'YYYY-MM-DD  HH:mm:ss',
+  'YYYY-MM-DD HH:mm',
+  'YYYY-MM-DD  HH:mm',
+  'YYYY-MM-DDTHH:mm:ss.SSSZ',
+  'YYYY-MM-DDTHH:mm:ss',
+  'YYYY-M-D  H:mm:ss',
+  'YYYY-M-D  HH:mm:ss',
+  'YYYY-M-D H:mm:ss',
+  'YYYY-M-D HH:mm:ss',
+  'YYYY-M-D  H:m:s',
+  'YYYY-M-D H:mm',
+  'YYYY-MM-DD HH:mm',
+];
+
+function formatSolarDate(solar_datetime: string | null | undefined) {
+  if (solar_datetime == null || String(solar_datetime).trim() === '') return '';
+  const s = String(solar_datetime).trim();
+  for (const fmt of SOLAR_DATETIME_FORMATS) {
+    const m = moment(s, fmt, true);
+    if (m.isValid()) return m.format('阳历YYYY年MM月DD日');
   }
+  const m = moment(s);
+  if (m.isValid()) return m.format('阳历YYYY年MM月DD日');
+  return '—';
 }
 
 /** 将后端 solar_datetime 转为 BaziPan 可用的 "YYYY-M-D H:mm" */
 function toBaziPanSolarDate(solar_datetime: string | null | undefined): string {
   if (!solar_datetime) return '';
   const s = String(solar_datetime).trim();
-  const formats = [
-    'YYYY-MM-DD HH:mm:ss',
-    'YYYY-MM-DDTHH:mm:ss.SSSZ',
-    'YYYY-MM-DDTHH:mm:ss',
-    'YYYY-M-D  H:mm:ss',
-    'YYYY-M-D H:mm:ss',
-    'YYYY-M-D  H:m:s',
-    'YYYY-M-D H:mm',
-    'YYYY-MM-DD HH:mm',
-  ];
-  for (const fmt of formats) {
+  for (const fmt of SOLAR_DATETIME_FORMATS) {
     const m = moment(s, fmt, true);
     if (m.isValid()) return m.format('YYYY-M-D H:mm');
   }
@@ -252,6 +262,7 @@ export default function RecordListScreen({ navigation }: { navigation: any }) {
         solarDate: solarDate || moment().format('YYYY-M-D H:mm'),
         gender: toBaziPanGender(item.gender),
         nickname: item.nickname ?? '',
+        relationship: item.relationship ?? '',
         id: item.id ?? '',
       },
     };

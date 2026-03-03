@@ -1,4 +1,4 @@
-import {ScrollView, View, Text, TextInput, Button, TouchableWithoutFeedback, TouchableOpacity, Alert, SafeAreaView, Platform, Image} from 'react-native';
+import {ScrollView, View, Text, TextInput, Button, TouchableWithoutFeedback, TouchableOpacity, Alert, SafeAreaView, Platform} from 'react-native';
 import React, {useEffect, useState, useReducer} from 'react';
 import {JD, J2000, radd, int2, rad2str2} from '../../utils/eph0.js';
 import {SZJ} from '../../utils/eph.js';
@@ -14,6 +14,8 @@ import {Lunar, Solar} from 'lunar-javascript';
 import SelectDropdown from 'react-native-select-dropdown';
 import Clipboard from '@react-native-clipboard/clipboard';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/Ionicons';
+import {colors} from '../../theme/colorsBazi';
 import {useUserStore} from '../../store/index';
 import {useFocusEffect} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +25,8 @@ const reducer = (inputFrom, action) => {
     switch (action.type) {
         case 'UPDATE_NAME':
             return {...inputFrom, inputName: action.payload};
+        case 'UPDATE_RELATIONSHIP':
+            return {...inputFrom, relationship: action.payload};
         case 'UPDATE_PLACE':
             return {...inputFrom, inputPlace: action.payload};
         case 'UPDATE_DATE':
@@ -33,6 +37,15 @@ const reducer = (inputFrom, action) => {
             return inputFrom;
     }
 };
+
+/** 选择关系弹窗：分类与选项（含「自己」） */
+const RELATIONSHIP_CATEGORIES = [
+    { title: '亲密关系', color: '#c0392b', items: ['自己', '恋人', '伴侣', '暧昧对象'] },
+    { title: '家人', color: '#e67e22', items: ['父母', '孩子', '家人', '亲友'] },
+    { title: '社交', color: '#3498db', items: ['朋友', '同学', '前任', '特殊关系'] },
+    { title: '合作', color: '#9b59b6', items: ['同事', '领导', '老师', '学生', '客户'] },
+    { title: '其他', color: '#c0392b', items: ['名人', '案例', '其他'] },
+];
 const fantuiReducer = (ftBaziInfo, action) => {
     switch (action.type) {
         case 'UPDATE_NIANGAN':
@@ -80,10 +93,12 @@ export default function AddArchiveScreen({navigation, route}) {
     // 时间
     const [inputFrom, dispatch] = useReducer(reducer, {
         inputName: '',
+        relationship: '',
         inputDate: '',
         inputPlace: '',
         inputTime: ''
     });
+    const [relationshipModalVis, setRelationshipModalVis] = useState(false);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [currentTime, setCurrentTime] = useState(new Date());
     // 公历时间和农历时间
@@ -132,6 +147,7 @@ export default function AddArchiveScreen({navigation, route}) {
         dispatch({type: 'UPDATE_DATE', payload: dateNormalized});
         dispatch({type: 'UPDATE_TIME', payload: timeNormalized});
         dispatch({type: 'UPDATE_NAME', payload: editParams.nickname || ''});
+        dispatch({type: 'UPDATE_RELATIONSHIP', payload: editParams.relationship || ''});
         setSolarDate(dateNormalized);
         try {
             const lunar = calendar.solar2lunar(String(y), String(m), String(d));
@@ -142,6 +158,14 @@ export default function AddArchiveScreen({navigation, route}) {
         setGender(editParams.gender === 'female' ? 'female' : 'male');
         setDateType('gregorian');
     }, [route?.params?.editParams]);
+
+    // 从首页「生辰」进入且尚无「自己」档案时，预填关系为「自己」
+    useEffect(() => {
+        const initial = route?.params?.initialRelationship;
+        if (initial) {
+            dispatch({type: 'UPDATE_RELATIONSHIP', payload: initial});
+        }
+    }, [route?.params?.initialRelationship]);
 
     const handleCalaFantui = () => {
         var l = Solar.fromBaZi(ftBaziInfo.nianGan + ftBaziInfo.nianZhi, ftBaziInfo.yueGan + ftBaziInfo.yueZhi, ftBaziInfo.riGan + ftBaziInfo.riZhi, ftBaziInfo.shiGan + ftBaziInfo.shiZhi);
@@ -253,6 +277,7 @@ export default function AddArchiveScreen({navigation, route}) {
                 nickname: inputFrom.inputName,
                 place: inputFrom.inputPlace,
                 gender,
+                relationship: inputFrom.relationship || '',
                 id: isEditFlow ? String(editingRecordId) : '',
                 autoSaveAfterEdit: isEditFlow
             }
@@ -273,14 +298,20 @@ export default function AddArchiveScreen({navigation, route}) {
 
     return (
         <SafeAreaView style={styles.homeWrapper}>
-            {/* 顶部栏：头像（来自 store，与「我的」一致） | 八字记录入口 */}
+            {/* 顶部栏：返回 | 八字记录入口 */}
             <View style={styles.headerBar}>
-                <TouchableOpacity style={styles.headerAvatarWrap} activeOpacity={0.8}>
-                    {userInfo?.headimg_url ? (
-                        <Image source={{uri: userInfo.headimg_url}} style={styles.headerAvatar} resizeMode="cover" />
-                    ) : (
-                        <View style={[styles.headerAvatar, {backgroundColor: '#e8e4dc'}]} />
-                    )}
+                <TouchableOpacity
+                    style={styles.headerBackBtn}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                        if (navigation.canGoBack()) {
+                            navigation.goBack();
+                        } else {
+                            navigation.navigate('记录');
+                        }
+                    }}
+                >
+                    <Icon name="chevron-back" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.headerRecordsBtn}
@@ -326,6 +357,13 @@ export default function AddArchiveScreen({navigation, route}) {
                     <View style={styles.inputContainer}>
                         <TextInput value={inputFrom.inputName} onChangeText={text => dispatch({type: 'UPDATE_NAME', payload: text})} placeholder="姓名" placeholderTextColor="#9c958a" style={styles.formItem} />
                     </View>
+                    <TouchableOpacity style={styles.inputContainer} onPress={() => setRelationshipModalVis(true)} activeOpacity={1}>
+                        <View style={styles.formItemRow}>
+                            <Text style={[styles.formItemValue, !inputFrom.relationship && styles.formItemPlaceholder]}>
+                                {inputFrom.relationship || '请选择关系'}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
                     <View style={styles.inputContainer}>
                         <TextInput value={inputFrom.inputPlace} editable={false} placeholder="出生地点" placeholderTextColor="#9c958a" pointerEvents="none" style={styles.formItem} />
                     </View>
@@ -358,6 +396,45 @@ export default function AddArchiveScreen({navigation, route}) {
                         </View>
                         <TouchableOpacity style={styles.modalConfirmBtn} onPress={() => handleComfirmDate(null, currentDate)} activeOpacity={0.8}>
                             <Text style={styles.modalConfirmBtnText}>确定</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
+                {/* 选择关系弹窗 */}
+                <Modal isVisible={relationshipModalVis} style={styles.modal} onBackdropPress={() => setRelationshipModalVis(false)}>
+                    <View style={styles.modalRelationBox}>
+                        <View style={styles.modalRelationHeader}>
+                            <Text style={styles.modalRelationTitle}>请选择关系</Text>
+                            <TouchableOpacity style={styles.modalRelationClose} onPress={() => setRelationshipModalVis(false)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                                <Icon name="close" size={22} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                        </View>
+                        <ScrollView style={styles.modalRelationScroll} contentContainerStyle={styles.modalRelationScrollContent} showsVerticalScrollIndicator={false}>
+                            {RELATIONSHIP_CATEGORIES.map((cat, idx) => (
+                                <View key={idx} style={styles.relationCategory}>
+                                    <View style={[styles.relationCategoryBar, { backgroundColor: cat.color }]} />
+                                    <View style={styles.relationCategoryContent}>
+                                        <Text style={styles.relationCategoryTitle}>{cat.title}</Text>
+                                        <View style={styles.relationOptionsRow}>
+                                            {cat.items.map((item) => {
+                                                const selected = inputFrom.relationship === item;
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={item}
+                                                        style={[styles.relationOptionBtn, selected && styles.relationOptionBtnActive]}
+                                                        onPress={() => dispatch({ type: 'UPDATE_RELATIONSHIP', payload: item })}
+                                                        activeOpacity={0.8}
+                                                    >
+                                                        <Text style={[styles.relationOptionText, selected && styles.relationOptionTextActive]}>{item}</Text>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </View>
+                                    </View>
+                                </View>
+                            ))}
+                        </ScrollView>
+                        <TouchableOpacity style={styles.modalRelationConfirm} onPress={() => setRelationshipModalVis(false)} activeOpacity={0.8}>
+                            <Text style={styles.modalRelationConfirmText}>确认</Text>
                         </TouchableOpacity>
                     </View>
                 </Modal>

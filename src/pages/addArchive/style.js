@@ -25,21 +25,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  headerAvatarWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.card,
-    borderWidth: 2,
-    borderColor: colors.headerBarBorder,
-    overflow: 'hidden',
+  headerBackBtn: {
+    padding: 4,
+    marginLeft: -4,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  headerAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
   },
   headerPlusBtn: {
     width: 52,
@@ -140,7 +130,17 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   formItemPlaceholder: {
-    color: '#6b6358',
+    color: '#9c958a',
+  },
+  formItemRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 0,
+  },
+  formItemValue: {
+    fontSize: 15,
+    color: colors.text,
   },
   // 主按钮（不贴边，左右留白）
   button: {
@@ -292,6 +292,93 @@ const styles = StyleSheet.create({
   },
   modalnei: {
     minHeight: 200,
+  },
+  // 选择关系弹窗
+  modalRelationBox: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    paddingHorizontal: 16,
+    maxHeight: '80%',
+  },
+  modalRelationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  modalRelationTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  modalRelationClose: {
+    padding: 4,
+  },
+  modalRelationScroll: {
+    maxHeight: 360,
+  },
+  modalRelationScrollContent: {
+    paddingBottom: 16,
+  },
+  relationCategory: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  relationCategoryBar: {
+    width: 4,
+    borderRadius: 2,
+    marginRight: 10,
+  },
+  relationCategoryContent: {
+    flex: 1,
+  },
+  relationCategoryTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  relationOptionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -4,
+  },
+  relationOptionBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: colors.btnBg,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  relationOptionBtnActive: {
+    backgroundColor: '#b09d8740',
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  relationOptionText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  relationOptionTextActive: {
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  modalRelationConfirm: {
+    marginTop: 12,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+  },
+  modalRelationConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.card,
   },
 });
 

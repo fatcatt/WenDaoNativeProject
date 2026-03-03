@@ -51,7 +51,7 @@ const styles = {
     minWidth: 40,
     alignItems: 'flex-end',
     flexDirection: 'row',
-    gap: 16,
+    gap: 10,
   },
   headerTitleWrap: {
     flex: 1,
@@ -81,7 +81,7 @@ const styles = {
     paddingVertical: 12,
   },
   tabItemActive: {
-    borderBottomWidth: 3,
+    borderBottomWidth: 1.5,
     borderBottomColor: colors.tabBarActiveLine,
   },
   tabText: {
@@ -372,6 +372,75 @@ const styles = {
     }),
   },
   scrollContainer: {},
+
+  interpretTabWrap: {
+    paddingBottom: 24,
+  },
+
+  // 解读 tab 卡片（统一样式）
+  interpretCard: {
+    backgroundColor: colors.cardWarm,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+      },
+      android: { elevation: 3 },
+    }),
+  },
+  interpretCardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  interpretCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  interpretCardAction: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  interpretCardContent: {
+    marginTop: 4,
+  },
+  interpretCardLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 6,
+  },
+  interpretCardParagraph: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 22,
+    marginTop: 6,
+  },
+  interpretTagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    marginHorizontal: -4,
+  },
+  interpretTag: {
+    backgroundColor: colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  interpretTagText: {
+    fontSize: 13,
+    color: colors.text,
+  },
 };
 
 export default styles;
